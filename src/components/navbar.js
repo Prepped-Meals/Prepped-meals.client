@@ -14,7 +14,7 @@ const NavBar = () => {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <Link to={ROUTES.HOME} className="text-2xl font-bold">
-            🍽️ PreppedMeals
+            🍽️ Heatn'Eat
           </Link>
 
           <div className="hidden md:flex gap-6">
