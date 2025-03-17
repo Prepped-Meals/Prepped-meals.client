@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"],
+      "@context/*": ["context/*"],
+      "@routes/*": ["routes/*"],
+      "@data/*": ["data/*"],
+      "@assets/*": ["assets/*"],
+      "@pages/*": ["pages/*"],
+      "@components/*": ["components/*"]
+    }
+  },
+  "include": ["src/**/*.js", "src/**/*.jsx"],
+  "exclude": ["node_modules"]
+}
