@@ -10,7 +10,7 @@ const NavBar = () => {
   const { user, logout } = useAuth();
 
   return (
-    <nav className="bg-gray-800 text-white shadow-lg">
+    <nav className ="bg-green-900 text-white shadow-lg">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <Link to={ROUTES.HOME} className="text-2xl font-bold">
