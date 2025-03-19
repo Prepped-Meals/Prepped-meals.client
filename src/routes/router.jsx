@@ -29,9 +29,9 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.CART,
         element: (
-          <ProtectedRoute>
+          //<ProtectedRoute>
             <Cart />
-          </ProtectedRoute>
+          //</ProtectedRoute>
         ),
       },
       {
