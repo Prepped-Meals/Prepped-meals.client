@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
 import cartBg from "../assets/images/crt2.jpg"; // ✅ Import the image
+import { useContext, useEffect } from "react";
+import { CartContext } from "../context/cartContext";
 
 const Cart = () => {
   const navigate = useNavigate();
+  const { updateCart } = useContext(CartContext);
 
   // Sample cart items
   const [cartItems, setCartItems] = useState([
@@ -56,6 +59,10 @@ const Cart = () => {
   );
   const deliveryFee = 300; // Fixed delivery fee
   const total = subtotal + deliveryFee;
+
+  useEffect(() => {
+    updateCart(cartItems);
+  }, [cartItems , updateCart]);
 
   return (
     <div className="flex flex-col min-h-screen relative">
