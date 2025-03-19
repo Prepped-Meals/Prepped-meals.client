@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
+import cartBg from "../assets/images/crt2.jpg"; // ✅ Import the image
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -57,12 +58,22 @@ const Cart = () => {
   const total = subtotal + deliveryFee;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F8F2]">
-      {/* Cart Content */}
-      <div className="flex flex-col items-center flex-grow p-6">
-        <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
+    <div className="flex flex-col min-h-screen relative">
+      {/* Dark overlay for the background image */}
+      <div
+        className="absolute top-0 left-0 w-full h-full bg-black opacity-80"
+        style={{
+          backgroundImage: `url(${cartBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      ></div>
 
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl">
+      {/* Cart Content */}
+      <div className="flex flex-col items-center flex-grow p-6 relative z-10">
+        <h1 className="text-3xl font-bold mb-6 text-black">Your Cart</h1>
+
+        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl opacity-90">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b">
@@ -87,12 +98,10 @@ const Cart = () => {
                   </td>
                   <td className="p-2">{item.name}</td>
                   <td className="p-2">Rs: {item.price.toFixed(2)}</td>
-                  {/* Adjusted Quantity alignment */}
                   <td className="p-2 text-center">{item.quantity}</td>
                   <td className="p-2">
                     Rs: {(item.price * item.quantity).toFixed(2)}
                   </td>
-                  {/* Update Column */}
                   <td className="p-2 flex items-center space-x-2">
                     <button
                       onClick={() => handleIncrease(item.id)}
@@ -107,7 +116,6 @@ const Cart = () => {
                       -
                     </button>
                   </td>
-                  {/* Delete Column (Removed Red Background) */}
                   <td className="p-2">
                     <button
                       onClick={() => handleRemove(item.id)}
@@ -122,7 +130,7 @@ const Cart = () => {
           </table>
 
           {/* Cart Totals */}
-          <div className="mt-6 text-lg">
+          <div className="mt-6 text-lg text-black">
             <div className="flex justify-between border-t pt-2">
               <span>Subtotal:</span>
               <span>Rs: {subtotal.toFixed(2)}</span>
@@ -154,8 +162,6 @@ const Cart = () => {
           </div>
         </div>
       </div>
-
-     
     </div>
   );
 };
