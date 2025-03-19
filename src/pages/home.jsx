@@ -2,7 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 import Button from "../components/button";
-import Footer from "../components/footer";
 import { ROUTES } from "../routes/paths";
 
 const Home = () => {
