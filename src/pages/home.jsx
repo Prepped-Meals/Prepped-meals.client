@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import Button from "../components/button";
 import { ROUTES } from "../routes/paths";
 
@@ -11,7 +11,11 @@ const Home = () => {
     navigate(ROUTES.PAYMENT);
   };
 
-  //cart
+  const handleAdminClick = () =>{
+    console.log("Admin Meal button clicked");
+    navigate(ROUTES.MEALS_ADMIN);
+  }
+  
   const handleCartClick = () => {
     console.log("Go to Cart clicked!");
     navigate(ROUTES.CART);
@@ -19,6 +23,7 @@ const Home = () => {
 
   return (
     <>
+
       <div className="flex flex-col items-center justify-center h-screen bg-gray-200">
         <h1 className="text-4xl font-bold">Welcome to the Home Page</h1>
         <p className="text-lg mt-2">
@@ -28,6 +33,7 @@ const Home = () => {
         <Button onClick={handleCartClick} className="mt-2">
           Go to Cart
         </Button>
+        <Button onClick={handleAdminClick} className = "mt-4">Admin Meals</Button>
       </div>
 
       
