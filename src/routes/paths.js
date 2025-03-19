@@ -5,4 +5,6 @@ export const ROUTES = {
     SIGN_UP: "/sign-up",
     CART: "/cart",
     PAYMENT: "/payment",
+    MEALS_ADMIN: "/mealsAdmin",
+    ADD_MEALS: "/addMeals",
 };

@@ -9,6 +9,8 @@ import Cart from "../pages/cart";
 import Payment from "../pages/payment";
 import SignIn from "../pages/signIn";
 import SignUp from "../pages/signUp";
+import MealsAdmin from "../pages/mealsAdmin";
+import AddMeals from "../pages/addMeals";
 import { ROUTES } from "./paths";
 
 export const router = createBrowserRouter([
@@ -39,6 +41,14 @@ export const router = createBrowserRouter([
           <Payment />
           // </ProtectedRoute>
         ),
+      },
+      {
+        path: ROUTES.MEALS_ADMIN,
+        element:<MealsAdmin/>
+      },
+      {
+        path: ROUTES.ADD_MEALS,
+        element:<AddMeals/>
       },
     ],
   },

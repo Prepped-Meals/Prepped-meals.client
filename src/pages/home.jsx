@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 
 import Button from "../components/button";
 import Footer from "../components/footer";
@@ -13,12 +13,18 @@ const Home = () => {
     navigate(ROUTES.PAYMENT);
   };
 
+  const handleAdminClick = () =>{
+    console.log("Admin Meal button clicked");
+    navigate(ROUTES.MEALS_ADMIN);
+  };
+
   return (
     <>
     <div className="flex flex-col items-center justify-center h-screen bg-gray-200">
       <h1 className="text-4xl font-bold">Welcome to the Home Page</h1>
       <p className="text-lg mt-2">This is a basic home screen for your app.</p>
       <Button onClick={handleClick}>Go to Payment</Button>
+      <Button onClick={handleAdminClick} className = "mt-4">Admin Meals</Button>
     </div>
 
     <Footer/>
