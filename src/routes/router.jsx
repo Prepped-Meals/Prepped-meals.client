@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
-
-import ProtectedRoute from "./protectedRoute";
+// import ProtectedRoute from "./protectedRoute";
 import { AuthProvider } from "../context/authContext";
 import App from "../App";
 import Home from "../pages/home";
@@ -12,6 +11,7 @@ import SignUp from "../pages/signUp";
 import MealsAdmin from "../pages/mealsAdmin";
 import AddMeals from "../pages/addMeals";
 import { ROUTES } from "./paths";
+import CardPayment from "../pages/cardPayment";
 
 export const router = createBrowserRouter([
   {
@@ -30,7 +30,7 @@ export const router = createBrowserRouter([
         path: ROUTES.CART,
         element: (
           //<ProtectedRoute>
-            <Cart />
+          <Cart />
           //</ProtectedRoute>
         ),
       },
@@ -44,11 +44,15 @@ export const router = createBrowserRouter([
       },
       {
         path: ROUTES.MEALS_ADMIN,
-        element:<MealsAdmin/>
+        element: <MealsAdmin />,
       },
       {
         path: ROUTES.ADD_MEALS,
-        element:<AddMeals/>
+        element: <AddMeals />,
+      },
+      {
+        path: ROUTES.CARDPAYMENT,
+        element: <CardPayment/>,
       },
     ],
   },

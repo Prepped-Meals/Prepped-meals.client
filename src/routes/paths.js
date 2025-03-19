@@ -7,4 +7,5 @@ export const ROUTES = {
     PAYMENT: "/payment",
     MEALS_ADMIN: "/mealsAdmin",
     ADD_MEALS: "/addMeals",
+    CARDPAYMENT: "/cardpayment",
 };
