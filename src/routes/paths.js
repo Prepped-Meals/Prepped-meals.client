@@ -8,4 +8,6 @@ export const ROUTES = {
     MEALS_ADMIN: "/mealsAdmin",
     ADD_MEALS: "/addMeals",
     CARDPAYMENT: "/cardpayment",
+    CUSTOMER_PROFILE: "/profile",
+    RESET_PASSWORD : "/security",
 };
