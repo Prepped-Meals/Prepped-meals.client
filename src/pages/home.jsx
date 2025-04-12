@@ -21,6 +21,13 @@ const Home = () => {
     navigate(ROUTES.CART);
   };
 
+  const handleProfileClick = () => {
+    console.log("Customer Profile clicked!");
+    navigate(ROUTES.CUSTOMER_PROFILE);
+  };
+  
+  
+
   return (
     <>
 
@@ -34,6 +41,10 @@ const Home = () => {
           Go to Cart
         </Button>
         <Button onClick={handleAdminClick} className = "mt-4">Admin Meals</Button>
+        <Button onClick={handleProfileClick} className="mt-2">
+         Go to Customer Profile
+        </Button>
+
       </div>
 
       
