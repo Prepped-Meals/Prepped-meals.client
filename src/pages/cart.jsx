@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
-import cartBg from "../assets/images/crt2.jpg"; // ✅ Import the image
+import cartBg from "../assets/images/crt2.jpg";
 import { useContext, useEffect } from "react";
 import { CartContext } from "../context/cartContext";
 
