@@ -12,6 +12,9 @@ import MealsAdmin from "../pages/mealsAdmin";
 import AddMeals from "../pages/addMeals";
 import { ROUTES } from "./paths";
 import CardPayment from "../pages/cardPayment";
+import CustomerProfile from "../pages/customerProfile";
+import ResetPassword from "../pages/ResetPassword";
+
 
 export const router = createBrowserRouter([
   {
@@ -54,6 +57,17 @@ export const router = createBrowserRouter([
         path: ROUTES.CARDPAYMENT,
         element: <CardPayment/>,
       },
+
+      {
+        path: ROUTES.CUSTOMER_PROFILE,
+        element: <CustomerProfile />,
+      },
+
+      {
+        path: ROUTES.RESET_PASSWORD,
+        element: <ResetPassword />,
+      },
+      
     ],
   },
 ]);
