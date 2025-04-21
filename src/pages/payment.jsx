@@ -5,16 +5,10 @@ import { CartContext } from "../context/cartContext";
 import { useSavePaymentDetails } from "../hooks/useSavePaymentDetails.js";
 import paymentBg from "../assets/images/paymentBg.jpg";
 
-
 const Payment = () => {
   const navigate = useNavigate();
   const { cartItems } = useContext(CartContext);
-  const {
-    mutate: savePaymentDetails,
-    isLoading,
-    isError,
-    error,
-  } = useSavePaymentDetails();
+  const { mutate: savePaymentDetails } = useSavePaymentDetails();
   // Delivery Info States
   const [address, setAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -65,98 +59,97 @@ const Payment = () => {
   };
 
   return (
-
-    <div className="flex flex-col items-center justify-center min-h-screen bg-cover bg-center p-8"
-         style={{ backgroundImage: `url(${paymentBg})` }}
-     >
-
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white p-6">
-      {/* Back to Cart Button */}
-      <button
-        onClick={() => navigate(ROUTES.CART)}
-        className="self-start mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-      >
-        ← Back to Cart
-      </button>
-
-      <h1 className="text-4xl font-bold mb-4 text-green-700">Payment Page</h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="bg-green-50 p-8 rounded-lg shadow-md w-full max-w-md"
-      >
-        <h2 className="text-2xl font-semibold mb-4 text-green-800">
-          Delivery Information
-        </h2>
-
-        <div className="mb-4">
-          <label className="block mb-2 text-green-900">Address:</label>
-          <textarea
-            className="w-full p-2 border border-green-300 rounded"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            required
-          ></textarea>
-        </div>
-
-        <div className="mb-4">
-          <label className="block mb-2 text-green-900">Phone Number:</label>
-          <input
-            type="tel"
-            className="w-full p-2 border border-green-300 rounded"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            required
-          />
-        </div>
-
-        <h2 className="text-xl font-semibold mb-4 text-green-800">
-          Select Payment Method:
-        </h2>
-
-        <div className="mb-4 flex flex-col space-y-2">
-          <label className="flex items-center text-green-900">
-            <input
-              type="radio"
-              value="CashOnDelivery"
-              checked={paymentMethod === "CashOnDelivery"}
-              onChange={() => setPaymentMethod("CashOnDelivery")}
-              className="mr-2"
-            />
-            Cash on Delivery
-          </label>
-          <label className="flex items-center text-green-900">
-            <input
-              type="radio"
-              value="CardPayment"
-              checked={paymentMethod === "CardPayment"}
-              onChange={() => setPaymentMethod("CardPayment")}
-              className="mr-2"
-            />
-            Card Payment
-          </label>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-          <p className="text-green-800 mb-2">
-            Subtotal: Rs {subtotal.toFixed(2)}
-          </p>
-          <p className="text-green-800 mb-2">
-            Delivery Fee: Rs {deliveryFee.toFixed(2)}
-          </p>
-          <p className="font-bold text-green-900 text-lg">
-            Total: Rs {total.toFixed(2)}
-          </p>
-        </div>
-
+    <div
+      className="flex flex-col items-center justify-center min-h-screen bg-cover bg-center p-8"
+      style={{ backgroundImage: `url(${paymentBg})` }}
+    >
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white p-6">
+        {/* Back to Cart Button */}
         <button
-          type="submit"
-          className="w-full bg-green-700 text-white py-2 rounded-lg hover:bg-green-800 transition"
+          onClick={() => navigate(ROUTES.CART)}
+          className="self-start mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
         >
-          Confirm & Proceed
+          ← Back to Cart
         </button>
-      </form>
-    </div>
+
+        <h1 className="text-4xl font-bold mb-4 text-green-700">Payment Page</h1>
+
+        <form
+          onSubmit={handleSubmit}
+          className="bg-green-50 p-8 rounded-lg shadow-md w-full max-w-md"
+        >
+          <h2 className="text-2xl font-semibold mb-4 text-green-800">
+            Delivery Information
+          </h2>
+
+          <div className="mb-4">
+            <label className="block mb-2 text-green-900">Address:</label>
+            <textarea
+              className="w-full p-2 border border-green-300 rounded"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              required
+            ></textarea>
+          </div>
+
+          <div className="mb-4">
+            <label className="block mb-2 text-green-900">Phone Number:</label>
+            <input
+              type="tel"
+              className="w-full p-2 border border-green-300 rounded"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              required
+            />
+          </div>
+
+          <h2 className="text-xl font-semibold mb-4 text-green-800">
+            Select Payment Method:
+          </h2>
+
+          <div className="mb-4 flex flex-col space-y-2">
+            <label className="flex items-center text-green-900">
+              <input
+                type="radio"
+                value="CashOnDelivery"
+                checked={paymentMethod === "CashOnDelivery"}
+                onChange={() => setPaymentMethod("CashOnDelivery")}
+                className="mr-2"
+              />
+              Cash on Delivery
+            </label>
+            <label className="flex items-center text-green-900">
+              <input
+                type="radio"
+                value="CardPayment"
+                checked={paymentMethod === "CardPayment"}
+                onChange={() => setPaymentMethod("CardPayment")}
+                className="mr-2"
+              />
+              Card Payment
+            </label>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+            <p className="text-green-800 mb-2">
+              Subtotal: Rs {subtotal.toFixed(2)}
+            </p>
+            <p className="text-green-800 mb-2">
+              Delivery Fee: Rs {deliveryFee.toFixed(2)}
+            </p>
+            <p className="font-bold text-green-900 text-lg">
+              Total: Rs {total.toFixed(2)}
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-green-700 text-white py-2 rounded-lg hover:bg-green-800 transition"
+          >
+            Confirm & Proceed
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

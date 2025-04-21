@@ -40,7 +40,7 @@ const Home = () => {
           className="w-full h-full object-cover"
         />
         </div>
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-200">
+      {/* <div className="flex flex-col items-center justify-center h-screen bg-gray-200">
         <h1 className="text-4xl font-bold">Welcome to the Home Page</h1>
         <p className="text-lg mt-2">
           This is a basic home screen for your app.
@@ -54,13 +54,14 @@ const Home = () => {
          Go to Customer Profile
         </Button>
 
-      </div>
+      </div> */}
 
       {/* Buttons Below */}
       <div className="flex flex-row items-center justify-center my-8 space-x-4">
         <Button onClick={handleClick}>Go to Payment</Button>
         <Button onClick={handleCartClick}>Go to Cart</Button>
         <Button onClick={handleAdminClick}>Admin Meals</Button>
+        <Button onClick={handleProfileClick}> Go to Customer Profile</Button>
       </div>
     </div>
   );

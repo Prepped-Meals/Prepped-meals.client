@@ -11,12 +11,7 @@ const CardPayment = () => {
   const location = useLocation();
   const paymentDetails = location.state || {};
 
-  const {
-    mutate: savePaymentDetails,
-    isLoading,
-    isError,
-    error,
-  } = useSavePaymentDetails();
+  const { mutate: savePaymentDetails } = useSavePaymentDetails();
 
   console.log("Payment Details", paymentDetails);
   // Input fields state
@@ -86,7 +81,6 @@ const CardPayment = () => {
   };
 
   return (
-    
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
       <h1 className="text-4xl font-bold mb-6 text-green-700">Card Payment</h1>
 
@@ -184,4 +178,3 @@ const CardPayment = () => {
 };
 
 export default CardPayment;
-
