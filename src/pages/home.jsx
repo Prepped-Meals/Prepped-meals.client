@@ -58,7 +58,6 @@ const Home = () => {
         <Button onClick={handleClick}>Go to Payment</Button>
         <Button onClick={handleCartClick}>Go to Cart</Button>
         <Button onClick={handleAdminClick}>Admin Meals</Button>
-        <Button onClick={handleProfileClick}> Go to Customer Profile</Button>
       </div>
     </div>
   );
