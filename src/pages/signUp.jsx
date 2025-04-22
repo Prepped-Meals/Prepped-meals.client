@@ -1,21 +1,24 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import signupImage from "../assets/images/SignUpImage.jpg";
 import Button from "../components/button.js";
 import { useSaveCusDetails } from "../hooks/useSaveCusDetails";
-
+import { useAuth } from "../context/authContext";
+import { ROUTES } from "../routes/paths";
 
 function SignUp() {
   const [formData, setFormData] = useState({
-    f_name :'',
-    l_name :'',
-    email : '',
-    contact_no : '',
-    username : '',
+    f_name: '', 
+    l_name: '',
+    email: '',
+    contact_no: '',
+    username: '',
     password: '',
-    confirmPassword : ''
-
+    confirmPassword: ''
   });
 
+  const navigate = useNavigate();
+  const { login } = useAuth(); // from authContext
   const saveCustomerMutation = useSaveCusDetails();
 
   const handleChange = (e) => {
@@ -25,137 +28,73 @@ function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data:", formData);
 
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
       return;
-  }
+    }
 
-  try {
-    await saveCustomerMutation.mutateAsync(formData);
-    alert("Signup successful!");
-    setFormData({
-      f_name: '',
-      l_name: '',
-      email: '',
-      contact_no: '',
-      username: '',
-      password: '',
-      confirmPassword: ''
-    });
+    try {
+      const { data } = await saveCustomerMutation.mutateAsync(formData);
+      alert("Signup successful!");
 
-  } catch (error) {
-    console.error('Error:', error);
-    alert("An error occurred. Please try again.");
-  }
-};
+      // auto login user
+      login(data); // assuming the returned `data` contains user info
+
+      setFormData({
+        f_name: '',
+        l_name: '',
+        email: '',
+        contact_no: '',
+        username: '',
+        password: '',
+        confirmPassword: ''
+      });
+
+      navigate(ROUTES.MENU); // redirect to menu page
+    } catch (error) {
+      console.error('Error:', error);
+      alert("An error occurred. Please try again.");
+    }
+  };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen ">
-      
-      {/*Image Section */}
+    <div className="flex flex-col md:flex-row h-screen">
+      {/* Image Section */}
       <div
         className="md:w-1/2 w-full h-screen bg-cover bg-center flex-shrink-0"
         style={{ backgroundImage: `url(${signupImage})` }}
       ></div>
 
-      {/*form*/}
-
-      <div className="md:w-1/2  w-full bg-[FFFFF] flex items-center justify-center p-7 mt-10">
+      {/* Form Section */}
+      <div className="md:w-1/2 w-full bg-white flex items-center justify-center p-7 mt-10">
         <div className="w-full max-w-md">
-          <h2 className="text-2xl font-bold text-center mb-4">
-            Create your account
-          </h2>
+          <h2 className="text-2xl font-bold text-center mb-4">Create your account</h2>
 
-          <form onSubmit = {handleSubmit} className="space-y-3">
-            <div>
-              <label className="block text-gray-700 text-sm">First Name</label>
-              <input
-                type="text"
-                name="f_name"
-                className="w-full px-3 py-2 border rounded-lg text-sm"
-                
-                value={formData.f_name}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {[ 
+              { label: "First Name", name: "f_name", type: "text" },
+              { label: "Last Name", name: "l_name", type: "text" },
+              { label: "Email Address", name: "email", type: "email" },
+              { label: "Phone Number", name: "contact_no", type: "tel" },
+              { label: "Username", name: "username", type: "text", placeholder: "eg. alexaRawles" },
+              { label: "Password", name: "password", type: "password" },
+              { label: "Confirm Password", name: "confirmPassword", type: "password" }
+            ].map(({ label, name, type, placeholder }) => (
+              <div key={name}>
+                <label className="block text-gray-700 text-sm">{label}</label>
+                <input
+                  type={type}
+                  name={name}
+                  placeholder={placeholder}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  value={formData[name]}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            ))}
 
-            <div>
-              <label className="block text-gray-700 text-sm">Last Name</label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 border rounded-lg text-sm"
-                name="l_name"
-                    value={formData.l_name}
-                    onChange={handleChange}
-                    required
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 text-sm">Email Address</label>
-              <input
-                type="email"
-                name = "email"
-                className="w-full px-4 py-2 border rounded-lg"
-                value={formData.email}
-                    onChange={handleChange}
-                    required
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 text-sm">Phone Number</label>
-              <input
-                type="tel"
-                name="contact_no" 
-                className="w-full px-3 py-2 border rounded-lg"
-                value={formData.contact_no}
-                    onChange={handleChange}
-                    required
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 text-sm">Username</label>
-              <input
-                type="text"
-                name="username"
-                placeholder="eg. alexaRawles"
-                className="w-full px-3 py-2 border rounded-lg"
-                value={formData.username}
-                    onChange={handleChange}
-                    required
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 text-sm">Password</label>
-              <input
-                type="password"
-                name="password"
-                className="w-full px-4 py-2 border rounded-lg text-sm"
-                value={formData.password}
-                    onChange={handleChange}
-                    required
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 text-sm">Confirm Password</label>
-              <input
-                type="password"
-                 name="confirmPassword"
-                className="w-full px-3 py-2 border rounded-lg text-sm"
-                value={formData.confirmPassword}
-                    onChange={handleChange}
-                    required
-              />
-            </div>
-
-            {/* Using the Button component */}
             <Button
               type="submit"
               variant="primary"

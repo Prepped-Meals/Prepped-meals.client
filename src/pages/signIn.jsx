@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import signupImage from "../assets/images/SignUpImage.jpg";
 import Button from "../components/button.js";
+import { useAuth } from "../context/authContext"; // ✅ import auth context
 
 const SignIn = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth(); // ✅ destructure login from context
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,14 +19,14 @@ const SignIn = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
-        credentials: 'include', // Ensure cookies (sessions) are sent with the request
-    });
-    
+        credentials: 'include', // Ensure cookies (sessions) are sent
+      });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
 
-      navigate("/"); 
+      login(data.customer); // ✅ update auth context
+      navigate("/");
     } catch (err) {
       setError(err.message || "Something went wrong, please try again.");
     }
@@ -66,7 +68,6 @@ const SignIn = () => {
               />
             </div>
 
-            {/* Button component */}
             <Button
               type="submit"
               variant="primary"
@@ -79,7 +80,7 @@ const SignIn = () => {
 
           <p className="text-center text-sm mt-4">
             Don't have an account?{" "}
-            <a href="SignUp.jsx" className="text-green-600 font-semibold">
+            <a href="/sign-up" className="text-green-600 font-semibold">
               Sign up
             </a>
           </p>
