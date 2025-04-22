@@ -4,6 +4,7 @@ import axios from "axios";
 
 import Button from "../components/button";
 import { ROUTES } from "../routes/paths";
+import bgImage from "../assets/images/batch-cooking.jpg"; // Background image
 
 const Menu = () => {
   const navigate = useNavigate();
@@ -15,24 +16,20 @@ const Menu = () => {
     const fetchMeals = async () => {
       try {
         const response = await axios.get("http://localhost:8000/api/get-meals/get");
-        console.log("API Response:", response.data); // Log the entire response
-
-        if (response.data && response.data.meals && Array.isArray(response.data.meals) && response.data.meals.length > 0) {
-          // Check if response.data and response.data.meals exist and are an array
+        if (
+          response.data &&
+          response.data.meals &&
+          Array.isArray(response.data.meals)
+        ) {
           setMeals(response.data.meals);
-        } else if (response.data && response.data.meals && Array.isArray(response.data.meals) && response.data.meals.length === 0) {
-          setMeals([]); // Set an empty array if no meals are returned
-        }
-         else {
-          // Handle unexpected response format or empty data appropriately
+        } else {
           setError("Unexpected data format from the server.");
           console.error("Unexpected data format:", response.data);
         }
-
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching meals:", error);
         setError("Failed to load meals. Please try again later.");
+      } finally {
         setLoading(false);
       }
     };
@@ -40,21 +37,46 @@ const Menu = () => {
     fetchMeals();
   }, []);
 
-  const handleAddToCart = () => {
-    console.log("Navigating to Cart Page...");
+  const handleAddToCart = (meal) => {
+    const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    const existingIndex = existingCart.findIndex((item) => item.meal === meal._id);
+
+    if (existingIndex !== -1) {
+      // Update quantity and total price
+      existingCart[existingIndex].quantity += 1;
+      existingCart[existingIndex].total_price =
+        existingCart[existingIndex].meal_price * existingCart[existingIndex].quantity;
+    } else {
+      // Add new item
+      existingCart.push({
+        meal: meal._id,
+        meal_name: meal.meal_name,
+        meal_price: meal.meal_price,
+        quantity: 1,
+        total_price: meal.meal_price,
+      });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(existingCart));
+
+    // Navigate to cart page
     navigate(ROUTES.CART);
   };
 
   return (
-    <div className="flex flex-col items-center bg-gray-100 min-h-screen py-10">
-      <h1 className="text-4xl font-bold mb-8">Menu Page</h1>
+    <div
+      className="flex flex-col items-center min-h-screen py-10 bg-cover bg-center"
+      style={{ backgroundImage: `url(${bgImage})` }}
+    >
+      <h1 className="text-4xl font-extrabold text-black mb-8">Menu Page</h1>
 
       {loading ? (
-        <p className="text-lg">Loading meals...</p>
+        <p className="text-lg text-white">Loading meals...</p>
       ) : error ? (
-        <p className="text-red-500">{error}</p>
+        <p className="text-red-300">{error}</p>
       ) : meals.length === 0 ? (
-        <p className="text-lg">No meals available at the moment.</p>
+        <p className="text-lg text-white">No meals available at the moment.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {meals.map((meal) => (
@@ -68,7 +90,7 @@ const Menu = () => {
                 Calories: {meal.calorie_count}
               </p>
               <p className="font-bold text-lg mb-4">Rs. {meal.meal_price}</p>
-              <Button onClick={handleAddToCart}>Add to Cart</Button>
+              <Button onClick={() => handleAddToCart(meal)}>Add to Cart</Button>
             </div>
           ))}
         </div>
