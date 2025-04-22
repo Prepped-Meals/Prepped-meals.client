@@ -1,41 +1,77 @@
 import React from 'react'
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Button from "../components/button";
-import {ROUTES} from '../routes/paths';
+import { ROUTES } from '../routes/paths';
+import SidebarAdmin from '../components/sidebarAdmin';
+import { useFetchMeals } from '../hooks/useFetchMeals';
 
 const MealsAdmin = () => {
     const aNavigate = useNavigate();
+    const { data: meals, isError, isLoading } = useFetchMeals();
 
     const handleAddMealClick = () => {
         console.log("Add meals button clicked");
         aNavigate(ROUTES.ADD_MEALS);
     };
-    
-  return (
-    <div className = "flex h-screen bg-gray-100">
-    {/*space for sidebar*/}
-    <div className = "w-64  bg-gray-200">/</div>
 
-    {/*main content area*/}
-        <div className = "flex-1 p-6">
+    if (isLoading) {
+        return <p>Loading meals...</p>;
+    }
 
-        {/*Page header*/}
-        <h1 className = "text-2xl font-bold mb-4 mt-2" style={{fontFamily:'Poppins, sans-serif'}}>MEALS</h1>
+    if (isError) {
+        return <p>Error fetching meals</p>;
+    }
 
-        {/*added a div to seperate meals and header*/}
-        <div className = "bg-yellow-100 p-4 rounded-lg shadow-md" style={{minHeight: '80vh'}}>
+    console.log("Meals data:", meals); // Log meals to confirm they are fetched
 
-        {/*Add meals button*/}
-        <Button onClick={handleAddMealClick} className = "bg-green-700 text-white mt-4" >Add Meals</Button>
+    return (
+        <div className="flex h-screen bg-gray-100">
+            {/* Sidebar */}
+            <SidebarAdmin />
 
-        <h1 className = "text-1xl font-bold mb-4 mt-10">MEALS ADDED</h1>
+            {/* Main Content Area */}
+            <div className="flex-1 p-6">
+                {/* Page Header */}
+                <h1 className="text-2xl font-bold mb-4 mt-2" style={{ fontFamily: 'Poppins, sans-serif' }}>MEALS</h1>
 
-            {/*placeholder for view meal data)*/}
-            <div className = "text-gray-500">Meal data</div>
+                {/* Add Meals Section */}
+                <div className="bg-yellow-100 p-4 rounded-lg shadow-md" style={{ minHeight: '80vh' }}>
+                    <div>
+                        {/* Add Meals Button */}
+                        <Button onClick={handleAddMealClick} className="bg-green-700 text-white mt-4">Add Meals</Button>
+
+                        {/* Reports Button */}
+                        <Button className="bg-green-700 text-white">Reports </Button>
+                    </div>
+
+                    <h1 className="text-1xl font-bold mb-4 mt-10">MEALS ADDED</h1>
+
+                    {/* Meal Cards */}
+                    {meals && meals.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            {meals.map((meal, index) => (
+                                <div key={meal.meal_id || index} className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center">
+                                    {/* Displaying Meal Image */}
+                                    <img
+                                        src={meal.imageUrl || 'https://via.placeholder.com/150'} // Fallback if no image URL
+                                        alt={meal.meal_name || 'Meal Image'} // Fallback alt text
+                                        className="rounded-lg mb-4 w-full h-40 object-cover"
+                                    />
+                                    {/* Displaying Meal Details */}
+                                    <p className="text-sm font-semibold text-gray-600">#{meal.meal_id || 'N/A'}</p>
+                                    <h2 className="text-lg font-bold mb-1">{meal.meal_name || 'Unnamed Meal'}</h2>
+                                    <p className="text-gray-800">Rs. {meal.meal_price || 'Price not available'}</p>
+                                    <p className="text-sm text-gray-500">{meal.meal_description || 'No description available'}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-gray-500">No meals added yet.</p>
+                    )}
+                </div>
             </div>
-         </div>
-    </div>   
-  );
+        </div>
+    );
 };
 
 export default MealsAdmin;

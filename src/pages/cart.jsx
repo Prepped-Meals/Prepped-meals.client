@@ -1,37 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
-import cartBg from "../assets/images/crt2.jpg"; // ✅ Import the image
-import { useContext, useEffect } from "react";
+import cartBg from "../assets/images/crt2.jpg";
+import { useContext } from "react";
 import { CartContext } from "../context/cartContext";
 
 const Cart = () => {
   const navigate = useNavigate();
   const { updateCart } = useContext(CartContext);
 
-  // Sample cart items
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Chicken Tikka Masala with Rice",
-      price: 1000,
-      quantity: 2,
-      image: "/images/chicken_tikka.jpg",
-    },
-    {
-      id: 2,
-      name: "Cabbage Salad",
-      price: 500,
-      quantity: 2,
-      image: "/images/cabbage_salad.jpg",
-    },
-  ]);
+  // Sample cart items from localStorage
+  const [cartItems, setCartItems] = useState(
+    JSON.parse(localStorage.getItem("cart")) || []
+  );
 
   // Increase quantity
   const handleIncrease = (id) => {
     setCartItems(
       cartItems.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
+        item.meal === id
+          ? { ...item, quantity: item.quantity + 1, total_price: item.meal_price * (item.quantity + 1) }
+          : item
       )
     );
   };
@@ -40,8 +29,8 @@ const Cart = () => {
   const handleDecrease = (id) => {
     setCartItems(
       cartItems.map((item) =>
-        item.id === id && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1 }
+        item.meal === id && item.quantity > 1
+          ? { ...item, quantity: item.quantity - 1, total_price: item.meal_price * (item.quantity - 1) }
           : item
       )
     );
@@ -49,24 +38,25 @@ const Cart = () => {
 
   // Remove item from cart
   const handleRemove = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
+    setCartItems(cartItems.filter((item) => item.meal !== id));
   };
+
+  // Update cart data in localStorage
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cartItems));
+    updateCart(cartItems);
+  }, [cartItems, updateCart]);
 
   // Calculate totals
   const subtotal = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
+    (total, item) => total + (item.total_price || 0),
     0
   );
   const deliveryFee = 300; // Fixed delivery fee
   const total = subtotal + deliveryFee;
 
-  useEffect(() => {
-    updateCart(cartItems);
-  }, [cartItems , updateCart]);
-
   return (
     <div className="flex flex-col min-h-screen relative">
-      {/* Dark overlay for the background image */}
       <div
         className="absolute top-0 left-0 w-full h-full bg-black opacity-80"
         style={{
@@ -76,7 +66,6 @@ const Cart = () => {
         }}
       ></div>
 
-      {/* Cart Content */}
       <div className="flex flex-col items-center flex-grow p-6 relative z-10">
         <h1 className="text-3xl font-bold mb-6 text-black">Your Cart</h1>
 
@@ -95,29 +84,31 @@ const Cart = () => {
             </thead>
             <tbody>
               {cartItems.map((item) => (
-                <tr key={item.id} className="border-b">
+                <tr key={item.meal} className="border-b">
                   <td className="p-2">
                     <img
-                      src={item.image}
-                      alt={item.name}
+                      src={item.image || "/images/default.jpg"} // Default image if no image is provided
+                      alt={item.meal_name}
                       className="w-12 h-12 rounded-md"
                     />
                   </td>
-                  <td className="p-2">{item.name}</td>
-                  <td className="p-2">Rs: {item.price.toFixed(2)}</td>
+                  <td className="p-2">{item.meal_name}</td>
+                  <td className="p-2">
+                    Rs: {item.meal_price ? item.meal_price.toFixed(2) : "N/A"}
+                  </td>
                   <td className="p-2 text-center">{item.quantity}</td>
                   <td className="p-2">
-                    Rs: {(item.price * item.quantity).toFixed(2)}
+                    Rs: {item.total_price ? item.total_price.toFixed(2) : "N/A"}
                   </td>
                   <td className="p-2 flex items-center space-x-2">
                     <button
-                      onClick={() => handleIncrease(item.id)}
+                      onClick={() => handleIncrease(item.meal)}
                       className="px-2 py-1 bg-gray-300 rounded text-lg font-bold"
                     >
                       +
                     </button>
                     <button
-                      onClick={() => handleDecrease(item.id)}
+                      onClick={() => handleDecrease(item.meal)}
                       className="px-2 py-1 bg-gray-300 rounded text-lg font-bold"
                     >
                       -
@@ -125,7 +116,7 @@ const Cart = () => {
                   </td>
                   <td className="p-2">
                     <button
-                      onClick={() => handleRemove(item.id)}
+                      onClick={() => handleRemove(item.meal)}
                       className="text-gray-600 hover:text-red-500 text-lg"
                     >
                       🗑️
@@ -136,7 +127,6 @@ const Cart = () => {
             </tbody>
           </table>
 
-          {/* Cart Totals */}
           <div className="mt-6 text-lg text-black">
             <div className="flex justify-between border-t pt-2">
               <span>Subtotal:</span>
@@ -152,7 +142,6 @@ const Cart = () => {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex justify-between mt-6">
             <button
               onClick={() => navigate(ROUTES.MENU)}
