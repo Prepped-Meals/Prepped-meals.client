@@ -14,6 +14,7 @@ import { ROUTES } from "./paths";
 import CardPayment from "../pages/cardPayment";
 import CustomerProfile from "../pages/customerProfile";
 import ResetPassword from "../pages/ResetPassword";
+import OrdersPage from "../pages/orders"; 
 import DashboardAdmin from "../pages/adminDashboard";
 
 
@@ -74,6 +75,10 @@ export const router = createBrowserRouter([
         element: <DashboardAdmin/>
       }
       
+      {
+        path: ROUTES.MYORDERS,
+        element: <OrdersPage />, 
+      },
     ],
   },
 ]);

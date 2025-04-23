@@ -42,7 +42,7 @@ const NavBar = () => {
             {user && (
               <>
                 <Link to={ROUTES.CART} className="hover:text-gray-300">Cart</Link>
-                <Link to="/order-history" className="hover:text-gray-300">Order</Link>
+                <Link to={ROUTES.MYORDERS} className="hover:text-gray-300">Order</Link>
               </>
             )}
 
@@ -91,7 +91,7 @@ const NavBar = () => {
             {user ? (
               <>
                 <Link to={ROUTES.CART} className="hover:text-gray-300">Cart</Link>
-                <Link to="/order-history" className="hover:text-gray-300">Order</Link>
+                <Link to={ROUTES.MYORDERS} className="hover:text-gray-300">Order</Link>
                 <Link to={ROUTES.CUSTOMER_PROFILE} className="hover:text-gray-300">Profile</Link>
                 <Link to={ROUTES.RESET_PASSWORD} className="hover:text-gray-300">Security</Link>
                 <button onClick={logout} className="text-left hover:text-gray-300">Logout</button>
