@@ -22,12 +22,7 @@ const Home = () => {
     navigate(ROUTES.CART);
   };
 
-  const handleProfileClick = () => {
-    console.log("Customer Profile clicked!");
-    navigate(ROUTES.CUSTOMER_PROFILE);
-  };
-  
-  
+      
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-200">
@@ -50,6 +45,8 @@ const Home = () => {
           Go to Cart
         </Button>
         <Button onClick={handleAdminClick} className = "mt-4">Admin Meals</Button>
+        
+      </div>
         <Button onClick={handleProfileClick} className="mt-2">
          Go to Customer Profile
         </Button>
@@ -61,7 +58,6 @@ const Home = () => {
         <Button onClick={handleClick}>Go to Payment</Button>
         <Button onClick={handleCartClick}>Go to Cart</Button>
         <Button onClick={handleAdminClick}>Admin Meals</Button>
-        <Button onClick={handleProfileClick}> Go to Customer Profile</Button>
       </div>
     </div>
   );

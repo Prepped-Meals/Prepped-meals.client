@@ -1,3 +1,4 @@
+// src/context/authContext.js
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
@@ -16,10 +17,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    console.log("Customer Data:", user);
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
-  }, [user]);
- 
   const login = (userData) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -38,5 +41,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
- 
+
 export const useAuth = () => useContext(AuthContext);
