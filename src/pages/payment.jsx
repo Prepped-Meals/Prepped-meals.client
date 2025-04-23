@@ -4,10 +4,13 @@ import { ROUTES } from "../routes/paths";
 import { CartContext } from "../context/cartContext";
 import { useSavePaymentDetails } from "../hooks/useSavePaymentDetails.js";
 import paymentBg from "../assets/images/paymentBg.jpg";
+import { useAuth } from "../context/authContext";
 
 const Payment = () => {
   const navigate = useNavigate();
-  const { cartItems } = useContext(CartContext);
+
+  const { user } = useAuth(); // Get user details from auth context
+
   const { mutate: savePaymentDetails } = useSavePaymentDetails();
   // Delivery Info States
   const [address, setAddress] = useState("");
@@ -16,13 +19,8 @@ const Payment = () => {
   // Payment Method
   const [paymentMethod, setPaymentMethod] = useState("CashOnDelivery");
 
-  // Dummy Total (Ideally, should be passed via props/context)
-  const subtotal = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
-  const deliveryFee = 300;
-  const total = subtotal + deliveryFee;
+  // Cart Context
+  const { subtotal, deliveryFee, total } = useContext(CartContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,10 +29,15 @@ const Payment = () => {
       return;
     }
 
+    if (!user || !user._id) {
+      alert("User not logged in properly!");
+      return;
+    }
+
     if (paymentMethod === "CashOnDelivery") {
       try {
         await savePaymentDetails({
-          customer: "64f0d2a5c6c12345abc67890", // Replace with dynamic customer if needed
+          customer: user?._id,
           address: address,
           phone_number: phoneNumber,
           payment_amount: total,
@@ -48,7 +51,7 @@ const Payment = () => {
     } else if (paymentMethod === "CardPayment") {
       navigate(ROUTES.CARDPAYMENT, {
         state: {
-          customer: "64f0d2a5c6c12345abc67890", // Replace dynamically if needed
+          customer: user?._id,
           address,
           phone_number: phoneNumber,
           payment_amount: total,
@@ -63,7 +66,7 @@ const Payment = () => {
       className="flex flex-col items-center justify-center min-h-screen bg-cover bg-center p-8"
       style={{ backgroundImage: `url(${paymentBg})` }}
     >
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white p-6">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white p-8">
         {/* Back to Cart Button */}
         <button
           onClick={() => navigate(ROUTES.CART)}
@@ -77,6 +80,7 @@ const Payment = () => {
         <form
           onSubmit={handleSubmit}
           className="bg-green-50 p-8 rounded-lg shadow-md w-full max-w-md"
+          style={{ width: "25cm", height: "16cm" }}
         >
           <h2 className="text-2xl font-semibold mb-4 text-green-800">
             Delivery Information

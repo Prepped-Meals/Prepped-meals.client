@@ -1,59 +1,100 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
 import cartBg from "../assets/images/crt2.jpg";
-import { useContext } from "react";
 import { CartContext } from "../context/cartContext";
+import { useSaveCart } from "../hooks/useSaveCartDetails";
+import { useAuth } from "../context/authContext";
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { updateCart } = useContext(CartContext);
-
-  // Sample cart items from localStorage
+  const { user } = useAuth(); // Get user details from auth context
+  const { updateCart, customer } = useContext(CartContext);  // Use customer from context
   const [cartItems, setCartItems] = useState(
     JSON.parse(localStorage.getItem("cart")) || []
   );
 
-  // Increase quantity
+  const { mutate: saveCart, isLoading } = useSaveCart();
+
+  // Handle cart save
+  const handleSaveCart = () => {
+    // Log customer data to check if it's available
+    console.log("Customer Data:", user);
+
+    if (!user || !user._id) {
+      alert("Customer information is not available. Please log in again.");
+      return;
+    }
+
+    const cartData = {
+      cart_id: `cart_${Date.now()}`,
+      customer: user?._id,
+      meals: cartItems.map((item) => ({
+        meal: item.meal,
+        meal_name: item.meal_name,
+        meal_price: item.meal_price,
+        quantity: item.quantity,
+        total_price: item.total_price,
+      })),
+    };
+
+    console.log("Saving cart to DB:", cartData);
+    saveCart(cartData);
+  };
+
+  // Handle increase in quantity
   const handleIncrease = (id) => {
     setCartItems(
       cartItems.map((item) =>
         item.meal === id
-          ? { ...item, quantity: item.quantity + 1, total_price: item.meal_price * (item.quantity + 1) }
+          ? {
+              ...item,
+              quantity: item.quantity + 1,
+              total_price: item.meal_price * (item.quantity + 1),
+            }
           : item
       )
     );
   };
 
-  // Decrease quantity
+  // Handle decrease in quantity
   const handleDecrease = (id) => {
     setCartItems(
       cartItems.map((item) =>
         item.meal === id && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1, total_price: item.meal_price * (item.quantity - 1) }
+          ? {
+              ...item,
+              quantity: item.quantity - 1,
+              total_price: item.meal_price * (item.quantity - 1),
+            }
           : item
       )
     );
   };
 
-  // Remove item from cart
+  // Handle removing an item from the cart
   const handleRemove = (id) => {
     setCartItems(cartItems.filter((item) => item.meal !== id));
   };
 
-  // Update cart data in localStorage
+  // Update localStorage whenever cart changes
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
     updateCart(cartItems);
   }, [cartItems, updateCart]);
 
-  // Calculate totals
+  // Calculate subtotal, delivery fee, and total price
   const subtotal = cartItems.reduce(
     (total, item) => total + (item.total_price || 0),
     0
   );
-  const deliveryFee = 300; // Fixed delivery fee
+  const deliveryFee = 300;
   const total = subtotal + deliveryFee;
+
+  // Check if customer is null and handle case when it's still loading
+  if (customer === null) {
+    return <div>Loading customer information...</div>;
+  }
 
   return (
     <div className="flex flex-col min-h-screen relative">
@@ -73,7 +114,6 @@ const Cart = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b">
-                <th className="p-2">Item</th>
                 <th className="p-2">Title</th>
                 <th className="p-2">Price</th>
                 <th className="p-2">Quantity</th>
@@ -85,13 +125,6 @@ const Cart = () => {
             <tbody>
               {cartItems.map((item) => (
                 <tr key={item.meal} className="border-b">
-                  <td className="p-2">
-                    <img
-                      src={item.image || "/images/default.jpg"} // Default image if no image is provided
-                      alt={item.meal_name}
-                      className="w-12 h-12 rounded-md"
-                    />
-                  </td>
                   <td className="p-2">{item.meal_name}</td>
                   <td className="p-2">
                     Rs: {item.meal_price ? item.meal_price.toFixed(2) : "N/A"}
@@ -154,6 +187,16 @@ const Cart = () => {
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
             >
               Proceed To Check Out
+            </button>
+          </div>
+
+          <div className="mt-4 text-center">
+            <button
+              onClick={handleSaveCart}
+              disabled={isLoading}
+              className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition"
+            >
+              {isLoading ? "Saving..." : "Save Cart to Database"}
             </button>
           </div>
         </div>

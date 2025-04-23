@@ -2,15 +2,16 @@ import {Link} from "react-router-dom";
 import {useState} from "react";
 import {FiHome, FiHeart, FiClipboard,FiUsers,FiLogOut  } from "react-icons/fi";
 import profilePic from '../assets/images/pro.png';
+import { ROUTES } from "../routes/paths";
 
 
 const SidebarAdmin = () => {
     const [profileImage, setProfileImage] = useState(profilePic);
 
     const menuItems = [
-        {name : "Dashboard", icon: <FiHome size= {20}/>, path:"/pages/dashboard"},
+        {name : "Dashboard", icon: <FiHome size= {20}/>, path: ROUTES.DASHBOARD_ADMIN},
         {name: "Orders", icon:<FiClipboard size={20}/>, path: "/pages/orders"},
-        {name: "Meals", icon: <FiHeart size={20}/>, path:"/pages/mealsAdmin"},
+        {name: "Meals", icon: <FiHeart size={20}/>, path: ROUTES.MEALS_ADMIN},
         {name: "Customers", icon: <FiUsers size={20}/>, path:"/pages/customersAdmin"},
         {name: "Feedback", icon: <FiUsers size={20}/>, path:"/pages/feedback"},
         {name: "Logout", icon: <FiLogOut  size={20}/>, path:"/pages/feedback"},
@@ -29,7 +30,7 @@ const SidebarAdmin = () => {
 
 
 return (
-  <div className="h-screen w-64 bg-gray-200 p-4 flex flex-col items-center">
+  <div className="h-screen w-64 bg-green-100 p-4 flex flex-col items-center">
     {/* Profile Section */}
     <div className="flex flex-col items-center mb-6">
       <label htmlFor="profile-upload" className="cursor-pointer">
