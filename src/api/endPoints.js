@@ -8,4 +8,6 @@ export const END_POINTS = {
   GET_MEAL_DETAILS: "api/get-meals/get",
   // SAVE_MEAL_DETAILS: "api/meals",
   // GET_MEAL_DETAILS: "api/meals",
+  SAVE_CART_DETAILS: "api/cart/add-to-cart" ,
+  
 };
