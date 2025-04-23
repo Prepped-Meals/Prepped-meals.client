@@ -73,7 +73,7 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.DASHBOARD_ADMIN,
         element: <DashboardAdmin/>
-      }
+      },
       
       {
         path: ROUTES.MYORDERS,
