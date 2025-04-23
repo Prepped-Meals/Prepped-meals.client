@@ -14,6 +14,9 @@ import { ROUTES } from "./paths";
 import CardPayment from "../pages/cardPayment";
 import CustomerProfile from "../pages/customerProfile";
 import ResetPassword from "../pages/ResetPassword";
+import OrdersPage from "../pages/orders"; // Adjust path if needed
+
+
 
 
 export const router = createBrowserRouter([
@@ -68,6 +71,10 @@ export const router = createBrowserRouter([
         element: <ResetPassword />,
       },
       
+      {
+        path: ROUTES.MYORDERS,
+        element: <OrdersPage />, 
+      },
     ],
   },
 ]);
