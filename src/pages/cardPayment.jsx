@@ -4,8 +4,10 @@ import { ROUTES } from "../routes/paths";
 import { useSaveCardDetails } from "../hooks/useSaveCardDetails.js";
 import { useLocation } from "react-router-dom";
 import { useSavePaymentDetails } from "../hooks/useSavePaymentDetails.js";
+import { useAuth } from "../context/authContext";
 
 const CardPayment = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const saveCardDetails = useSaveCardDetails();
   const location = useLocation();
@@ -35,7 +37,7 @@ const CardPayment = () => {
     if (cardHolderName && cardNumber && expiryDate && cvv) {
       try {
         await saveCardDetails.mutateAsync({
-          customer: "64f0d2a5c6c12345abc67890", // Replace with dynamic customer if needed
+          customer: user?._id, // Replace with dynamic customer if needed
           cardholder_name: cardHolderName,
           card_number: cardNumber,
           cvv: cvv,
