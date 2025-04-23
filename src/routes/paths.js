@@ -10,4 +10,5 @@ export const ROUTES = {
     CARDPAYMENT: "/cardpayment",
     CUSTOMER_PROFILE: "/profile",
     RESET_PASSWORD : "/security",
+    DASHBOARD_ADMIN : "/DashboardAdmin",
 };
