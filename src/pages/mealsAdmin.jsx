@@ -53,7 +53,7 @@ const MealsAdmin = () => {
                                 {meals.map((meal, index) => (
                                     <div key={meal.meal_id || index} className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center">
                                         <img
-                                            src={meal.imageUrl || 'https://via.placeholder.com/150'}
+                                            src={meal.meal_image || 'https://via.placeholder.com/150'}
                                             alt={meal.meal_name || 'Meal Image'}
                                             className="rounded-lg mb-4 w-full h-40 object-cover"
                                         />
