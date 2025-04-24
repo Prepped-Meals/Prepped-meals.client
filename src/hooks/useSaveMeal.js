@@ -9,13 +9,22 @@ import { END_POINTS } from "../api/endPoints.js";
 
 const saveMealDetails = async (mealData) => {
     try {
-        const response = await apiClient.post(END_POINTS.SAVE_MEAL_DETAILS, mealData);
+        const response = await apiClient.post(
+            END_POINTS.SAVE_MEAL_DETAILS,
+            mealData,
+            {
+                headers: {
+                    'Content-Type': undefined, // 👈 This is the key fix
+                },
+            }
+        );
         return response.data;
     } catch (error) {
         console.error("API Error:", error.response ? error.response.data : error.message);
-        throw error; // Ensure the error is thrown so `onError` is triggered
+        throw error;
     }
 };
+
 
 
 //customer hook to save meal detials
