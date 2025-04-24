@@ -16,6 +16,7 @@ import CustomerProfile from "../pages/customerProfile";
 import ResetPassword from "../pages/ResetPassword";
 import OrdersPage from "../pages/orders"; 
 import DashboardAdmin from "../pages/adminDashboard";
+import FeedbackPage from "../pages/feedback"; 
 
 
 export const router = createBrowserRouter([
@@ -78,6 +79,12 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.MYORDERS,
         element: <OrdersPage />, 
+      },
+
+      {
+        path: ROUTES.CUSTOMER_FEEDBACK,
+        element: <FeedbackPage />,
+        
       },
     ],
   },
