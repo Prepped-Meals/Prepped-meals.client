@@ -51,99 +51,56 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F6F2] flex flex-col items-center justify-center">
-      {/* Title */}
-      <div className="px-8 mt-8 w-full text-left pl-16">
-        <h2 className="text-3xl font-bold text-[#004225] mb-2">Security</h2>
-        <div className="w-16 h-1 bg-[#004225] ml-0"></div>
-      </div>
-
-      {/* Form Box */}
-      <div className="w-96 bg-[#DCE1DA] p-8 rounded-xl shadow-lg mt-10">
+    <div className="min-h-screen bg-gradient-to-br from-[#E9F5EC] via-[#F4F9F4] to-[#D7E7DC] flex items-center justify-center px-4">
+      <div className="w-full max-w-md backdrop-blur-md bg-white/70 border border-[#dbe7dc] p-8 rounded-3xl shadow-2xl transition-all duration-300">
         <div className="text-center mb-6">
-          <div className="text-4xl mb-3">🔒</div>
-          <h2 className="text-xl font-semibold text-[#004225]">Reset Password</h2>
+          <div className="text-5xl animate-pulse">🔐</div>
+          <h2 className="text-2xl font-extrabold text-[#004225] mt-2">Reset Password</h2>
         </div>
 
         {message && (
           <div
-            className={`text-sm mb-4 text-center ${
-              message.includes("success") ? "text-green-600" : "text-red-600"
+            className={`text-sm mb-4 text-center font-medium ${
+              message.includes("success") ? "text-green-600" : "text-red-500"
             }`}
           >
             {message}
           </div>
         )}
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label className="block text-sm font-medium text-[#004225]">Current Password</label>
-            <div className="relative">
-              <input
-                type={showPassword.current ? "text" : "password"}
-                name="currentPassword"
-                value={formData.currentPassword}
-                onChange={handleChange}
-                className="w-full p-2 border border-[#004225] rounded bg-[#F2F4EF] pr-10 text-[#004225]"
-                required
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2"
-                onClick={() => toggleVisibility("current")}
-              >
-                {showPassword.current ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {[
+            { name: "currentPassword", label: "Current Password", field: "current" },
+            { name: "newPassword", label: "New Password", field: "new" },
+            { name: "confirmPassword", label: "Confirm New Password", field: "confirm" },
+          ].map(({ name, label, field }) => (
+            <div key={name}>
+              <label className="block text-sm font-semibold text-[#004225] mb-1">{label}</label>
+              <div className="relative">
+                <input
+                  type={showPassword[field] ? "text" : "password"}
+                  name={name}
+                  value={formData[name]}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 text-sm text-[#004225] bg-[#f3f6f1] border border-[#bfcab3] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#004225] pr-10 transition-all duration-200"
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#004225] hover:text-[#002912] transition-colors"
+                  onClick={() => toggleVisibility(field)}
+                >
+                  {showPassword[field] ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#004225]">New Password</label>
-            <div className="relative">
-              <input
-                type={showPassword.new ? "text" : "password"}
-                name="newPassword"
-                value={formData.newPassword}
-                onChange={handleChange}
-                className="w-full p-2 border border-[#004225] rounded bg-[#F2F4EF] pr-10 text-[#004225]"
-                required
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2"
-                onClick={() => toggleVisibility("new")}
-              >
-                {showPassword.new ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#004225]">Confirm New Password</label>
-            <div className="relative">
-              <input
-                type={showPassword.confirm ? "text" : "password"}
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="w-full p-2 border border-[#004225] rounded bg-[#F2F4EF] pr-10 text-[#004225]"
-                required
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-3 top-1/2 transform -translate-y-1/2"
-                onClick={() => toggleVisibility("confirm")}
-              >
-                {showPassword.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
+          ))}
 
           <button
             type="submit"
-            className="w-full bg-[#004225] text-white p-2 rounded hover:bg-[#00331C]"
+            className="w-full py-2 mt-2 bg-[#004225] hover:bg-[#002912] text-white font-semibold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
           >
-            Save
+            Save Changes
           </button>
         </form>
       </div>

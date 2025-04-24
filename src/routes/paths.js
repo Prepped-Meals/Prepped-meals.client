@@ -12,4 +12,5 @@ export const ROUTES = {
     RESET_PASSWORD : "/security",
     MYORDERS: "/orders",
     DASHBOARD_ADMIN : "/DashboardAdmin",
+    CUSTOMER_FEEDBACK : "/feedback",
 };

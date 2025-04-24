@@ -43,6 +43,7 @@ const NavBar = () => {
               <>
                 <Link to={ROUTES.CART} className="hover:text-gray-300">Cart</Link>
                 <Link to={ROUTES.MYORDERS} className="hover:text-gray-300">Order</Link>
+                <Link to ={ROUTES.CUSTOMER_FEEDBACK} className="hover:text-gray-300">Feedback</Link>
               </>
             )}
 
