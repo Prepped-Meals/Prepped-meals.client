@@ -14,7 +14,7 @@ const SidebarAdmin = () => {
         {name: "Meals", icon: <FiHeart size={20}/>, path: ROUTES.MEALS_ADMIN},
         {name: "Customers", icon: <FiUsers size={20}/>, path:"/pages/customersAdmin"},
         {name: "Feedback", icon: <FiUsers size={20}/>, path:"/pages/feedback"},
-        {name: "Logout", icon: <FiLogOut  size={20}/>, path:"/pages/feedback"},
+        {name: "Logout", icon: <FiLogOut  size={20}/>, path:ROUTES.LOGOUT_ADMIN},
 
     ];
 
