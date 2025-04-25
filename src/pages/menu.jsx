@@ -84,6 +84,12 @@ const Menu = () => {
               key={meal._id}
               className="bg-white p-6 rounded-xl shadow-md w-80 text-center"
             >
+              <img
+              src={`http://localhost:8000${meal.meal_image}`}
+              alt={meal.meal_name}
+              className="w-full h-48 object-cover rounded-md mb-4"
+              />
+
               <h2 className="text-2xl font-semibold mb-2">{meal.meal_name}</h2>
               <p className="text-gray-700 mb-2">{meal.meal_description}</p>
               <p className="text-sm text-gray-500 mb-1">

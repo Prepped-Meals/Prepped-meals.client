@@ -14,6 +14,8 @@ const CustomerProfile = () => {
     profilePic: '',
   });
 
+  const [errors, setErrors] = useState({});
+  const [attemptedSave, setAttemptedSave] = useState(false);
   const { logout } = useAuth(); 
 
   const fetchProfile = async () => {
@@ -46,14 +48,45 @@ const CustomerProfile = () => {
     fetchProfile();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setProfileData({ ...profileData, [name]: value });
+  //validations
+  const validateFields = () => {
+    const newErrors = {};
+
+    if (!profileData.firstName.trim()) newErrors.firstName = "This field is required";
+    if (!profileData.lastName.trim()) newErrors.lastName = "This field is required";
+
+    if (!profileData.phoneNumber.trim()) {
+      newErrors.phoneNumber = "This field is required";
+    } else if (!/^\d{10}$/.test(profileData.phoneNumber)) {
+      newErrors.phoneNumber = "Phone number must be 10 digits";
+    }
+
+    if (!profileData.email.trim()) {
+      newErrors.email = "This field is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(profileData.email)) {
+      newErrors.email = "Invalid email address";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleEdit = () => setIsEditing(true);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+        setProfileData({ ...profileData, [name]: value });
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setAttemptedSave(false);
+    setErrors({});
+  };
 
   const handleSave = async () => {
+    setAttemptedSave(true);
+    if (!validateFields()) return;
+
     try {
       await fetch("http://localhost:8000/api/customers/me", {
         method: "PUT",
@@ -81,6 +114,8 @@ const CustomerProfile = () => {
 
       alert("Profile updated successfully!");
       setIsEditing(false);
+      setAttemptedSave(false);
+      setErrors({});
       fetchProfile();
     } catch (err) {
       console.error(err.message);
@@ -164,8 +199,15 @@ const CustomerProfile = () => {
                 value={profileData[field]}
                 onChange={handleChange}
                 disabled={!isEditing}
-                className="mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D6A26] bg-white"
+                className={`mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 ${
+                  errors[field] && attemptedSave
+                    ? 'border-red-500 ring-red-300'
+                    : 'focus:ring-[#1D6A26]'
+                } bg-white`}
               />
+              {errors[field] && attemptedSave && (
+                <p className="text-sm text-red-600 mt-1">{errors[field]}</p>
+              )}
             </div>
           ))}
           <div>
