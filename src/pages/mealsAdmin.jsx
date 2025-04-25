@@ -1,10 +1,12 @@
-import React from 'react'
+import React from 'react';
 import { useNavigate } from "react-router-dom";
 import Button from "../components/button";
 import { ROUTES } from '../routes/paths';
 import SidebarAdmin from '../components/sidebarAdmin';
 import { useFetchMeals } from '../hooks/useFetchMeals';
-import HeaderAdmin from '../components/headerAdmin'; // Make sure this is the correct import
+import HeaderAdmin from '../components/headerAdmin'; 
+import MealPopup from '../components/mealpopup';
+import UpdateMealPopup from '../components/updateMealpop';
 
 const MealsAdmin = () => {
     const aNavigate = useNavigate();
@@ -15,6 +17,42 @@ const MealsAdmin = () => {
         aNavigate(ROUTES.ADD_MEALS);
     };
 
+    const [selectedMeal, setSelectedMeal] = React.useState(null);
+    const [showPopup, setShowPopup] = React.useState(false);
+    const [showUpdatePopup, setShowUpdatePopup] = React.useState(false);
+
+    const handleMealCardClick = (meal) => {
+        setSelectedMeal(meal);
+        setShowPopup(true);
+    };
+
+    const handleClosePopup = () => {
+        setShowPopup(false);
+        setSelectedMeal(null);
+    };
+
+    const handleUpdateMeal = (mealId, formData) => {
+        // Example: Use a function to update the meal in your database
+        console.log("Updating meal with ID:", mealId);
+
+        // Example of what an API call might look like:
+        fetch(`/api/meals/${mealId}`, {
+            method: 'PUT',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Meal updated:", data);
+            // You can refresh the meal list here or close the popup
+            setShowUpdatePopup(false); // Close the update popup
+            // Optionally, you can refetch the meal list after update
+            // setMeals(updatedMeals); or use another method to refetch meals.
+        })
+        .catch(error => {
+            console.error("Error updating meal:", error);
+        });
+    };
+
     if (isLoading) {
         return <p>Loading meals...</p>;
     }
@@ -22,6 +60,28 @@ const MealsAdmin = () => {
     if (isError) {
         return <p>Error fetching meals</p>;
     }
+
+
+    //for deleting meals
+    const handleDeleteMeal = async (mealId) => {
+        const confirmed = window.confirm("Are you sure you want to delete this meal?");
+        if (!confirmed) return;
+    
+        try {
+            await fetch(`/api/create-meals/${mealId}`, {
+                method: 'DELETE',
+            });
+    
+            alert("Meal deleted successfully!");
+            setShowPopup(false); // close the popup
+            setSelectedMeal(null);
+            window.location.reload(); // reload page to reflect changes
+        } catch (error) {
+            console.error("Error deleting meal:", error);
+            alert("Failed to delete meal.");
+        }
+    };
+    
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -51,7 +111,9 @@ const MealsAdmin = () => {
                         {meals && meals.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {meals.map((meal, index) => (
-                                    <div key={meal.meal_id || index} className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center">
+                                    <div key={meal.meal_id || index} className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center"
+                                        onClick={() => handleMealCardClick(meal)}
+                                    >
                                         <img
                                             src={meal.meal_image || 'https://via.placeholder.com/150'}
                                             alt={meal.meal_name || 'Meal Image'}
@@ -69,6 +131,29 @@ const MealsAdmin = () => {
                         )}
                     </div>
                 </div>
+
+                {showPopup && selectedMeal && (
+                    <MealPopup
+                        meal={selectedMeal}
+                        onClose={handleClosePopup}
+                        onUpdate={() => {
+                            setShowPopup(false);
+                            setShowUpdatePopup(true);
+                        }}
+                        onDelete={() => handleDeleteMeal(selectedMeal.meal_id)}
+                    />
+                )}
+
+                {showUpdatePopup && selectedMeal && (
+                    <UpdateMealPopup
+                        meal={selectedMeal}
+                        onClose={() => {
+                            setShowUpdatePopup(false);
+                            setSelectedMeal(null);
+                        }}
+                        onSubmit={handleUpdateMeal}
+                    />
+                )}
             </div>
         </div>
     );
