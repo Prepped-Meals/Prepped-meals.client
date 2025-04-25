@@ -14,4 +14,5 @@ export const ROUTES = {
     DASHBOARD_ADMIN : "/DashboardAdmin",
     CUSTOMER_FEEDBACK : "/feedback",
     LOGOUT_ADMIN : "/SignIn",
+    ORDER : "/orders",
 };
