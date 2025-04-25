@@ -8,19 +8,15 @@ import { useAuth } from "../context/authContext";
 
 const Payment = () => {
   const navigate = useNavigate();
-
-  const { user } = useAuth(); // Get user details from auth context
-
+  const { user } = useAuth();
   const { mutate: savePaymentDetails } = useSavePaymentDetails();
-  // Delivery Info States
+
   const [address, setAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-
-  // Payment Method
   const [paymentMethod, setPaymentMethod] = useState("CashOnDelivery");
+  const { subtotal, deliveryFee, total, cartItems } = useContext(CartContext);
 
-  // Cart Context
-  const { subtotal, deliveryFee, total } = useContext(CartContext);
+  console.log("Cart Items:", cartItems); // Log cart items for debugging
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,13 +34,13 @@ const Payment = () => {
       try {
         await savePaymentDetails({
           customer: user?._id,
-          address: address,
+          address,
           phone_number: phoneNumber,
           payment_amount: total,
           payment_type: paymentMethod,
         });
         alert("Order placed successfully! Cash on Delivery selected.");
-        navigate(ROUTES.HOME);
+        navigate(ROUTES.ORDER);
       } catch (error) {
         alert("Error placing order: " + error.message);
       }
@@ -56,6 +52,7 @@ const Payment = () => {
           phone_number: phoneNumber,
           payment_amount: total,
           payment_type: paymentMethod,
+          cart_items: cartItems,
         },
       });
     }
@@ -63,92 +60,92 @@ const Payment = () => {
 
   return (
     <div
-      className="flex flex-col items-center justify-center min-h-screen bg-cover bg-center p-8"
+      className="relative min-h-screen flex items-center justify-center bg-cover bg-center px-4 py-10"
       style={{ backgroundImage: `url(${paymentBg})` }}
     >
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white p-8">
-        {/* Back to Cart Button */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-900/60 to-black/60 backdrop-blur-sm z-0" />
+
+      <div className="relative z-10 bg-white/90 backdrop-blur-xl shadow-2xl rounded-3xl p-10 max-w-2xl w-full">
         <button
           onClick={() => navigate(ROUTES.CART)}
-          className="self-start mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          className="mb-6 text-sm font-medium text-green-700 hover:text-green-900 transition"
         >
           ← Back to Cart
         </button>
 
-        <h1 className="text-4xl font-bold mb-4 text-green-700">Payment Page</h1>
+        <h1 className="text-4xl font-extrabold text-green-800 mb-6 text-center">
+          Checkout & Payment
+        </h1>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-green-50 p-8 rounded-lg shadow-md w-full max-w-md"
-          style={{ width: "25cm", height: "16cm" }}
-        >
-          <h2 className="text-2xl font-semibold mb-4 text-green-800">
-            Delivery Information
-          </h2>
-
-          <div className="mb-4">
-            <label className="block mb-2 text-green-900">Address:</label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold text-green-700 mb-2">
+              Delivery Information
+            </h2>
             <textarea
-              className="w-full p-2 border border-green-300 rounded"
+              className="w-full p-3 border border-green-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-green-400"
+              placeholder=" Enter Receiver's Name...
+                            Enter Delivery Address..."
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               required
-            ></textarea>
+            />
           </div>
 
-          <div className="mb-4">
-            <label className="block mb-2 text-green-900">Phone Number:</label>
+          <div>
             <input
               type="tel"
-              className="w-full p-2 border border-green-300 rounded"
+              className="w-full p-3 border border-green-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-green-400"
+              placeholder=" Enter phone number..."
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               required
             />
           </div>
 
-          <h2 className="text-xl font-semibold mb-4 text-green-800">
-            Select Payment Method:
-          </h2>
-
-          <div className="mb-4 flex flex-col space-y-2">
-            <label className="flex items-center text-green-900">
-              <input
-                type="radio"
-                value="CashOnDelivery"
-                checked={paymentMethod === "CashOnDelivery"}
-                onChange={() => setPaymentMethod("CashOnDelivery")}
-                className="mr-2"
-              />
-              Cash on Delivery
-            </label>
-            <label className="flex items-center text-green-900">
-              <input
-                type="radio"
-                value="CardPayment"
-                checked={paymentMethod === "CardPayment"}
-                onChange={() => setPaymentMethod("CardPayment")}
-                className="mr-2"
-              />
-              Card Payment
-            </label>
+          <div>
+            <h2 className="text-xl font-semibold text-green-700 mb-2">
+              Payment Method
+            </h2>
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-3 text-green-900">
+                <input
+                  type="radio"
+                  value="CashOnDelivery"
+                  checked={paymentMethod === "CashOnDelivery"}
+                  onChange={() => setPaymentMethod("CashOnDelivery")}
+                />
+                Cash on Delivery
+              </label>
+              <label className="flex items-center gap-3 text-green-900">
+                <input
+                  type="radio"
+                  value="CardPayment"
+                  checked={paymentMethod === "CardPayment"}
+                  onChange={() => setPaymentMethod("CardPayment")}
+                />
+                Card Payment
+              </label>
+            </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-            <p className="text-green-800 mb-2">
-              Subtotal: Rs {subtotal.toFixed(2)}
+          <div className="bg-green-100 rounded-xl p-5 shadow-md">
+            <p className="text-green-800">
+              Subtotal:{" "}
+              <span className="font-medium">Rs {subtotal.toFixed(2)}</span>
             </p>
-            <p className="text-green-800 mb-2">
-              Delivery Fee: Rs {deliveryFee.toFixed(2)}
+            <p className="text-green-800">
+              Delivery Fee:{" "}
+              <span className="font-medium">Rs {deliveryFee.toFixed(2)}</span>
             </p>
-            <p className="font-bold text-green-900 text-lg">
+            <p className="text-green-900 font-bold text-lg mt-2">
               Total: Rs {total.toFixed(2)}
             </p>
           </div>
 
           <button
             type="submit"
-            className="w-full bg-green-700 text-white py-2 rounded-lg hover:bg-green-800 transition"
+            className="w-full py-3 bg-green-700 text-white rounded-xl font-semibold hover:bg-green-800 transition-all duration-300"
           >
             Confirm & Proceed
           </button>
