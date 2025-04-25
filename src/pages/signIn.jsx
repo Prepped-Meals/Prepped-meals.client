@@ -2,32 +2,37 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import signupImage from "../assets/images/SignUpImage.jpg";
 import Button from "../components/button.js";
-import { useAuth } from "../context/authContext"; // import auth context
+import { useAuth } from "../context/authContext"; 
 
 const SignIn = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth(); //destructure login from context
+  const { login } = useAuth(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // const response = await fetch("http://localhost:8000/api/customers/login", {
+      
         const response = await fetch("http://localhost:8000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
-        credentials: 'include', // Ensure cookies (sessions) are sent
+        credentials: 'include', 
       });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
 
+      if (data.role === "admin"){
+        navigate("/DashboardAdmin"); 
+      }else{
       login(data.customer); 
       navigate("/");
+      }
+
     } catch (err) {
       setError(err.message || "Something went wrong, please try again.");
     }

@@ -12,10 +12,10 @@ const Home = () => {
     navigate(ROUTES.PAYMENT);
   };
 
-  const handleAdminClick = () => {
-    console.log("Admin Meal button clicked");
-    navigate(ROUTES.MEALS_ADMIN);
-  };
+  // const handleAdminClick = () => {
+  //   console.log("Admin Meal button clicked");
+  //   navigate(ROUTES.MEALS_ADMIN);
+  // };
 
   const handleCartClick = () => {
     console.log("Go to Cart clicked!");
@@ -57,7 +57,7 @@ const Home = () => {
       <div className="flex flex-row items-center justify-center my-8 space-x-4">
         <Button onClick={handleClick}>Go to Payment</Button>
         <Button onClick={handleCartClick}>Go to Cart</Button>
-        <Button onClick={handleAdminClick}>Admin Meals</Button>
+        {/* <Button onClick={handleAdminClick}>Admin Meals</Button> */}
       </div>
     </div>
   );
