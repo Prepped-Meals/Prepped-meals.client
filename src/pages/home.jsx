@@ -3,7 +3,7 @@ import bannerImg from "../assets/images/banner.jpg";
 import highProteinBreakfast from "../assets/images/ProteinBF_Dulen.jpg";
 import lowCarbGrilledChicken from "../assets/images/Grilled_Dulen.jpg";
 import veganDinner from "../assets/images/Vegen_Dulen.jpg";
-import balancedPowerBowl from "../assets/images/ProteinBF_Dulen.jpg";
+import balancedPowerBowl from "../assets/images/P.Bowl_Dulen.jpg";
 
 // Sample Testimonial Data
 const testimonials = [
