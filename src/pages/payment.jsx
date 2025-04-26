@@ -5,18 +5,20 @@ import { CartContext } from "../context/cartContext";
 import { useSavePaymentDetails } from "../hooks/useSavePaymentDetails.js";
 import paymentBg from "../assets/images/paymentBg.jpg";
 import { useAuth } from "../context/authContext";
+import { useSaveOrderDetails } from "../hooks/useSaveOrder.js";
 
 const Payment = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { mutate: savePaymentDetails } = useSavePaymentDetails();
+  const { mutate: saveOrderDetails } = useSaveOrderDetails();
 
   const [address, setAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CashOnDelivery");
   const { subtotal, deliveryFee, total, cartItems } = useContext(CartContext);
 
-  console.log("Cart Items:", cartItems); // Log cart items for debugging
+  console.log("Cart Items:", cartItems);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,19 +33,47 @@ const Payment = () => {
     }
 
     if (paymentMethod === "CashOnDelivery") {
-      try {
-        await savePaymentDetails({
+      savePaymentDetails(
+        {
           customer: user?._id,
           address,
           phone_number: phoneNumber,
           payment_amount: total,
           payment_type: paymentMethod,
-        });
-        alert("Order placed successfully! Cash on Delivery selected.");
-        navigate(ROUTES.ORDER);
-      } catch (error) {
-        alert("Error placing order: " + error.message);
-      }
+        },
+        {
+          onSuccess: async (responseData) => {
+            console.log(
+              "Order placed successfully! Payment Response:",
+              responseData
+            );
+
+            try {
+              await saveOrderDetails({
+                customer: user?._id,
+                payment: responseData.data._id,
+                cart_items: cartItems.map((item) => ({
+                  meal_id: item.meal,
+                  meal_name: item.meal_name,
+                  meal_price: item.meal_price,
+                  quantity: item.quantity,
+                  total_price: item.total_price,
+                })),
+                order_received_date: new Date(),
+              });
+              alert("Order placed successfully! Cash on Delivery selected.");
+              navigate(ROUTES.ORDER);
+            } catch (orderError) {
+              console.error("Error saving order:", orderError);
+              alert("Error saving order: " + orderError.message);
+            }
+          },
+          onError: (error) => {
+            console.error("Error placing payment:", error);
+            alert("Error placing payment: " + error.message);
+          },
+        }
+      );
     } else if (paymentMethod === "CardPayment") {
       navigate(ROUTES.CARDPAYMENT, {
         state: {
