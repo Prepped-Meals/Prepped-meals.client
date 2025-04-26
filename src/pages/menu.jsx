@@ -15,7 +15,9 @@ const Menu = () => {
   useEffect(() => {
     const fetchMeals = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/get-meals/get");
+        const response = await axios.get(
+          "http://localhost:8000/api/get-meals/get"
+        );
         if (
           response.data &&
           response.data.meals &&
@@ -40,13 +42,16 @@ const Menu = () => {
   const handleAddToCart = (meal) => {
     const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
 
-    const existingIndex = existingCart.findIndex((item) => item.meal === meal._id);
+    const existingIndex = existingCart.findIndex(
+      (item) => item.meal === meal._id
+    );
 
     if (existingIndex !== -1) {
       // Update quantity and total price
       existingCart[existingIndex].quantity += 1;
       existingCart[existingIndex].total_price =
-        existingCart[existingIndex].meal_price * existingCart[existingIndex].quantity;
+        existingCart[existingIndex].meal_price *
+        existingCart[existingIndex].quantity;
     } else {
       // Add new item
       existingCart.push({
@@ -85,9 +90,9 @@ const Menu = () => {
               className="bg-white p-6 rounded-xl shadow-md w-80 text-center"
             >
               <img
-              src={`http://localhost:8000${meal.meal_image}`}
-              alt={meal.meal_name}
-              className="w-full h-48 object-cover rounded-md mb-4"
+                src={`http://localhost:8000${meal.meal_image}`}
+                alt={meal.meal_name}
+                className="w-full h-48 object-cover rounded-md mb-4"
               />
 
               <h2 className="text-2xl font-semibold mb-2">{meal.meal_name}</h2>
