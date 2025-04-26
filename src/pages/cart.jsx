@@ -11,27 +11,37 @@ import { useAuth } from "../context/authContext";
 const Cart = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { updateCart, customer } = useContext(CartContext);
+  const {
+    updateCart,
+    customer,
+    cartId,
+    isCartEditing,
+    setCartId,
+    setIsCartEditing,
+    cartSaved,
+    setCartSaved,
+  } = useContext(CartContext);
 
   const [cartItems, setCartItems] = useState(
     JSON.parse(localStorage.getItem("cart")) || []
   );
-  const [cartSaved, setCartSaved] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [cartId, setCartId] = useState(null);
 
   const { mutate: saveCart, isLoading: savingCart } = useSaveCart();
   const { mutate: editCart, isLoading: editingCart } = useEditCartDetails();
-  const { mutate: deleteCart, isLoading: deletingCart } = useDeleteCartDetails();
+  const { mutate: deleteCart, isLoading: deletingCart } =
+    useDeleteCartDetails();
 
   const handleSaveCart = () => {
     if (!user || !user._id) {
       alert("Customer information is not available. Please log in again.");
       return;
     }
+    if (cartItems.length === 0) {
+      alert("Your Cart is Empty.");
+      return;
+    }
 
     const generatedCartId = `cart_${Date.now()}`;
-
     const cartData = {
       cart_id: generatedCartId,
       customer: user._id,
@@ -57,7 +67,7 @@ const Cart = () => {
   };
 
   const handleEditCart = () => {
-    setIsEditing(true);
+    setIsCartEditing(true);
   };
 
   const handleSaveEditedCart = () => {
@@ -83,7 +93,7 @@ const Cart = () => {
       {
         onSuccess: () => {
           alert("Cart updated successfully!");
-          setIsEditing(false);
+          setIsCartEditing(false);
         },
         onError: () => {
           alert("Failed to update cart. Please try again.");
@@ -105,7 +115,7 @@ const Cart = () => {
           localStorage.removeItem("cart");
           setCartItems([]);
           setCartSaved(false);
-          setIsEditing(false);
+          setIsCartEditing(false);
           setCartId(null);
           updateCart([]);
         },
@@ -117,7 +127,7 @@ const Cart = () => {
   };
 
   const handleIncrease = (id) => {
-    if (cartSaved && !isEditing) return;
+    if (cartSaved && !isCartEditing) return;
     setCartItems(
       cartItems.map((item) =>
         item.meal === id
@@ -132,7 +142,7 @@ const Cart = () => {
   };
 
   const handleDecrease = (id) => {
-    if (cartSaved && !isEditing) return;
+    if (cartSaved && !isCartEditing) return;
     setCartItems(
       cartItems.map((item) =>
         item.meal === id && item.quantity > 1
@@ -147,16 +157,16 @@ const Cart = () => {
   };
 
   const handleRemove = (id) => {
-    if (cartSaved && !isEditing) return;
+    if (cartSaved && !isCartEditing) return;
     setCartItems(cartItems.filter((item) => item.meal !== id));
   };
 
   useEffect(() => {
-    if (!cartSaved || isEditing) {
+    if (!cartSaved || isCartEditing) {
       localStorage.setItem("cart", JSON.stringify(cartItems));
       updateCart(cartItems);
     }
-  }, [cartItems, updateCart, cartSaved, isEditing]);
+  }, [cartItems, updateCart, cartSaved, isCartEditing]);
 
   const subtotal = cartItems.reduce(
     (total, item) => total + (item.total_price || 0),
@@ -199,21 +209,25 @@ const Cart = () => {
               {cartItems.map((item) => (
                 <tr key={item.meal} className="border-b">
                   <td className="p-2">{item.meal_name}</td>
-                  <td className="p-2">Rs: {item.meal_price?.toFixed(2) || "N/A"}</td>
+                  <td className="p-2">
+                    Rs: {item.meal_price?.toFixed(2) || "N/A"}
+                  </td>
                   <td className="p-2 text-center">{item.quantity}</td>
-                  <td className="p-2">Rs: {item.total_price?.toFixed(2) || "N/A"}</td>
+                  <td className="p-2">
+                    Rs: {item.total_price?.toFixed(2) || "N/A"}
+                  </td>
                   <td className="p-2 flex items-center space-x-2">
                     <button
                       onClick={() => handleIncrease(item.meal)}
                       className="px-2 py-1 bg-gray-300 rounded text-lg font-bold"
-                      disabled={cartSaved && !isEditing}
+                      disabled={cartSaved && !isCartEditing}
                     >
                       +
                     </button>
                     <button
                       onClick={() => handleDecrease(item.meal)}
                       className="px-2 py-1 bg-gray-300 rounded text-lg font-bold"
-                      disabled={cartSaved && !isEditing}
+                      disabled={cartSaved && !isCartEditing}
                     >
                       -
                     </button>
@@ -222,7 +236,7 @@ const Cart = () => {
                     <button
                       onClick={() => handleRemove(item.meal)}
                       className="text-gray-600 hover:text-red-500 text-lg"
-                      disabled={cartSaved && !isEditing}
+                      disabled={cartSaved && !isCartEditing}
                     >
                       🗑️
                     </button>
@@ -252,11 +266,11 @@ const Cart = () => {
               <button
                 onClick={() => navigate(ROUTES.MENU)}
                 className={`${
-                  cartSaved && !isEditing
+                  cartSaved && !isCartEditing
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-green-600 hover:bg-green-700"
                 } text-white px-4 py-2 rounded-lg transition`}
-                disabled={cartSaved && !isEditing}
+                disabled={cartSaved && !isCartEditing}
               >
                 Add more Meals
               </button>
@@ -270,7 +284,7 @@ const Cart = () => {
           )}
 
           <div className="mt-4 text-center space-x-4">
-            {!cartSaved && (
+            {!cartSaved && !isCartEditing && (
               <button
                 onClick={handleSaveCart}
                 disabled={savingCart}
@@ -279,7 +293,7 @@ const Cart = () => {
                 {savingCart ? "Saving..." : "Save Cart"}
               </button>
             )}
-            {cartSaved && !isEditing && (
+            {cartSaved && !isCartEditing && (
               <>
                 <button
                   onClick={handleEditCart}
@@ -297,7 +311,7 @@ const Cart = () => {
                 </button>
               </>
             )}
-            {isEditing && (
+            {isCartEditing && (
               <button
                 onClick={handleSaveEditedCart}
                 disabled={editingCart}
