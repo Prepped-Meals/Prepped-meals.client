@@ -18,8 +18,12 @@ function SignUp() {
   });
 
   const navigate = useNavigate();
-  const { login } = useAuth(); // from authContext
+  const { login } = useAuth(); 
   const saveCustomerMutation = useSaveCusDetails();
+
+  const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
+  const validatePhone = (phone) => /^\d{10}$/.test(phone);
+  const validatePassword = (password) => password.length >= 6;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,12 +38,28 @@ function SignUp() {
       return;
     }
 
+    if (!validateEmail(formData.email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    if (!validatePhone(formData.contact_no)) {
+      alert("Please enter a valid 10-digit phone number.");
+      return;
+    }
+
+    if (!validatePassword(formData.password)) {
+      alert("Password must be at least 6 characters long.");
+      return;
+    }
+
+
     try {
       const { data } = await saveCustomerMutation.mutateAsync(formData);
       alert("Signup successful!");
 
       // auto login user
-      login(data); // assuming the returned `data` contains user info
+      login(data); 
 
       setFormData({
         f_name: '',

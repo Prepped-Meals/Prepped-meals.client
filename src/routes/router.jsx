@@ -19,6 +19,7 @@ import DashboardAdmin from "../pages/adminDashboard";
 import FeedbackPage from "../pages/feedback"; 
 
 
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -86,6 +87,11 @@ export const router = createBrowserRouter([
         element: <FeedbackPage />,
         
       },
+
+      {
+        path: ROUTES.LOGOUT_ADMIN,
+        element: <SignIn />,
+      }
     ],
   },
 ]);

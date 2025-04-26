@@ -2,22 +2,22 @@ import { apiClient } from "../api/apiClient.js";
 import { END_POINTS } from "../api/endPoints.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-const savePaymentDetails = async (paymentData) => {
+const saveOrderDetails = async (orderData) => {
   const response = await apiClient.post(
-    END_POINTS.SAVE_PAYMENT_DETAILS,
-    paymentData
+    END_POINTS.SAVE_ORDER_DETAILS,
+    orderData
   );
   return response.data;
 };
 
-export const useSavePaymentDetails = () => {
+export const useSaveOrderDetails = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: savePaymentDetails,
+    mutationFn: saveOrderDetails,
     onSuccess: (data) => {
-      console.log("Success response data:", data);
-      queryClient.invalidateQueries(["paymentDetails"]);
+      console.log("Order saved successfully:", data);
+      queryClient.invalidateQueries(["orderDetails"]);
     },
   });
 };
