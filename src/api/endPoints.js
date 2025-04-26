@@ -6,10 +6,13 @@ export const END_POINTS = {
   GET_CUSTOMER_DETAILS: "api/customers",
   SAVE_MEAL_DETAILS: "api/create-meals",
   GET_MEAL_DETAILS: "api/get-meals/get",
-  SAVE_CART_DETAILS: "api/cart/add-to-cart" ,
+  SAVE_CART_DETAILS: "api/cart/add-to-cart",
   UPDATE_MEAL: "api/create-meals",
   DELETE_MEAL: "api/create-meals",
-  UPDATE_CARD_DETAILS: (cardId) => `api/card-details/update-payment-card/${cardId}`,
-  DELETE_CARD_DETAILS: (cardId) => `api/card-details/delete-payment-card/${cardId}`,
-  
+  UPDATE_CARD_DETAILS: (cardId) =>
+    `api/card-details/update-payment-card/${cardId}`,
+  DELETE_CARD_DETAILS: (cardId) =>
+    `api/card-details/delete-payment-card/${cardId}`,
+  GET_ORDER_DETAILS:`api/orders/get-all-orders`,
+  SAVE_ORDER_DETAILS: "api/orders/add-order",
 };

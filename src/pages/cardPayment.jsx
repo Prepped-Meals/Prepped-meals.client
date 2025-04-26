@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
 import { useSaveCardDetails } from "../hooks/useSaveCardDetails";
 import { useSavePaymentDetails } from "../hooks/useSavePaymentDetails";
 import { useAuth } from "../context/authContext";
-import { useGetCardDetails } from "../hooks/useGetCardDetails";
 import { useEditCardDetails } from "../hooks/useEditCardDetails";
 import { useDeleteCardDetails } from "../hooks/useDeleteCardDetails";
 import { FaCreditCard, FaUser, FaCalendarAlt, FaLock } from "react-icons/fa";
+import { useSaveOrderDetails } from "../hooks/useSaveOrder.js";
 
 const CardPayment = () => {
   const { user } = useAuth();
@@ -15,11 +15,11 @@ const CardPayment = () => {
   const location = useLocation();
   const paymentDetails = location.state || {};
 
-  const { data: cardDetails, refetch: refetchCardDetails } = useGetCardDetails(user?._id);
   const { mutate: saveCardDetails } = useSaveCardDetails();
   const { mutate: savePaymentDetails } = useSavePaymentDetails();
   const { mutate: editCardDetails } = useEditCardDetails();
   const { mutate: deleteCardDetails } = useDeleteCardDetails();
+  const { mutate: saveOrderDetails } = useSaveOrderDetails();
 
   const [cardHolderName, setCardHolderName] = useState("");
   const [cardNumber, setCardNumber] = useState("");
@@ -27,16 +27,6 @@ const CardPayment = () => {
   const [cvv, setCvv] = useState("");
   const [isCardSaved, setIsCardSaved] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-
-  useEffect(() => {
-    if (cardDetails) {
-      setCardHolderName(cardDetails.cardholder_name);
-      setCardNumber(cardDetails.card_number);
-      setExpiryDate(cardDetails.exp_date);
-      setCvv(cardDetails.cvv);
-      setIsCardSaved(true);
-    }
-  }, [cardDetails]);
 
   const handleSaveCard = async (e) => {
     e.preventDefault();
@@ -67,12 +57,12 @@ const CardPayment = () => {
   };
 
   const handleEditClick = () => {
-    setIsEditing(true); // Enable editing mode
+    setIsEditing(true);
   };
 
   const handleEditCard = async () => {
     const savedCard = JSON.parse(localStorage.getItem("savedCard"));
-  
+
     const updatedCardData = {
       customer: savedCard?.cardDetails?.customer,
       cardholder_name: cardHolderName?.trim(),
@@ -80,28 +70,28 @@ const CardPayment = () => {
       cvv: cvv?.trim(),
       exp_date: expiryDate?.trim(),
     };
-  
+
     try {
       await editCardDetails({
         cardId: savedCard?.cardDetails._id,
         updatedCardData,
       });
-  
+
       alert("Card details updated.");
       setIsEditing(false);
-      refetchCardDetails();
-  
+
       localStorage.setItem(
         "savedCard",
-        JSON.stringify({ cardDetails: { ...updatedCardData, _id: savedCard?.cardDetails._id } })
+        JSON.stringify({
+          cardDetails: { ...updatedCardData, _id: savedCard?.cardDetails._id },
+        })
       );
     } catch (error) {
       console.error(error.response?.data || error.message);
       alert("Error updating card details: " + error.message);
     }
   };
-  
-  
+
   const handleDeleteCard = async () => {
     const savedCard = JSON.parse(localStorage.getItem("savedCard"));
     try {
@@ -113,7 +103,6 @@ const CardPayment = () => {
       setExpiryDate("");
       setIsCardSaved(false);
       setIsEditing(false);
-      refetchCardDetails();
     } catch (error) {
       alert("Error deleting card details: " + error.message);
     }
@@ -121,26 +110,59 @@ const CardPayment = () => {
 
   const handleConfirmPayment = async () => {
     try {
-      await savePaymentDetails({
-        customer: user?._id,
-        address: paymentDetails?.address,
-        phone_number: paymentDetails?.phone_number,
-        payment_amount: paymentDetails?.payment_amount,
-        payment_type: paymentDetails?.payment_type,
-        card_details:
-          paymentDetails?.payment_type === "CardPayment"
-            ? {
-                cardholder_name: cardHolderName,
-                card_number: cardNumber,
-                cvv,
-                exp_date: expiryDate,
-              }
-            : undefined,
-      });
-      alert("Order placed successfully!");
-      navigate(ROUTES.ORDER);
+      await savePaymentDetails(
+        {
+          customer: user?._id,
+          address: paymentDetails?.address,
+          phone_number: paymentDetails?.phone_number,
+          payment_amount: paymentDetails?.payment_amount,
+          payment_type: paymentDetails?.payment_type,
+          card_details:
+            paymentDetails?.payment_type === "CardPayment"
+              ? {
+                  cardholder_name: cardHolderName,
+                  card_number: cardNumber,
+                  cvv,
+                  exp_date: expiryDate,
+                }
+              : undefined,
+        },
+        {
+          onSuccess: async (responseData) => {
+            console.log(
+              "Order placed successfully! Payment Response:",
+              responseData
+            );
+
+            try {
+              await saveOrderDetails({
+                customer: user?._id,
+                payment: responseData.data._id,
+                cart_items: paymentDetails.cart_items.map((item) => ({
+                  meal_id: item.meal,
+                  meal_name: item.meal_name,
+                  meal_price: item.meal_price,
+                  quantity: item.quantity,
+                  total_price: item.total_price,
+                })),
+                order_received_date: new Date(),
+              });
+              alert("Order placed successfully!");
+              navigate(ROUTES.ORDER);
+            } catch (orderError) {
+              console.error("Error saving order:", orderError);
+              alert("Error saving order: " + orderError.message);
+            }
+          },
+          onError: (error) => {
+            console.error("Error placing payment:", error);
+            alert("Error placing payment: " + error.message);
+          },
+        }
+      );
     } catch (error) {
-      alert("Error placing order: " + error.message);
+      console.error("Unexpected error:", error);
+      alert("Unexpected error: " + error.message);
     }
   };
 
@@ -149,12 +171,16 @@ const CardPayment = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-green-100 via-white to-green-100 p-4">
       <div className="w-full max-w-xl p-8 bg-white shadow-xl rounded-2xl">
-        <h2 className="text-3xl font-bold text-green-800 mb-8 text-center">Secure Card Payment</h2>
+        <h2 className="text-3xl font-bold text-green-800 mb-8 text-center">
+          Secure Card Payment
+        </h2>
 
         {/* Card Preview */}
         <div className="mb-8 p-6 rounded-xl bg-gradient-to-br from-green-500 to-green-700 text-white shadow-lg">
           <div className="text-sm uppercase tracking-wide">Card Preview</div>
-          <div className="mt-4 text-xl font-bold">{cardNumber || "**** **** **** ****"}</div>
+          <div className="mt-4 text-xl font-bold">
+            {cardNumber || "**** **** **** ****"}
+          </div>
           <div className="flex justify-between mt-4">
             <div>
               <div className="text-xs">Card Holder</div>
@@ -170,7 +196,9 @@ const CardPayment = () => {
         <form onSubmit={handleSaveCard} className="space-y-6">
           {/* Card Holder Name */}
           <div>
-            <label className="block mb-1 font-semibold text-gray-700">Card Holder Name</label>
+            <label className="block mb-1 font-semibold text-gray-700">
+              Card Holder Name
+            </label>
             <div className="relative">
               <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -187,7 +215,9 @@ const CardPayment = () => {
 
           {/* Card Number */}
           <div>
-            <label className="block mb-1 font-semibold text-gray-700">Card Number</label>
+            <label className="block mb-1 font-semibold text-gray-700">
+              Card Number
+            </label>
             <div className="relative">
               <FaCreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -205,7 +235,9 @@ const CardPayment = () => {
           {/* Expiry & CVV */}
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block mb-1 font-semibold text-gray-700">Expiry Date</label>
+              <label className="block mb-1 font-semibold text-gray-700">
+                Expiry Date
+              </label>
               <div className="relative">
                 <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
@@ -220,7 +252,9 @@ const CardPayment = () => {
               </div>
             </div>
             <div className="flex-1">
-              <label className="block mb-1 font-semibold text-gray-700">CVV</label>
+              <label className="block mb-1 font-semibold text-gray-700">
+                CVV
+              </label>
               <div className="relative">
                 <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
@@ -290,8 +324,3 @@ const CardPayment = () => {
 };
 
 export default CardPayment;
-
-
-
-
-
