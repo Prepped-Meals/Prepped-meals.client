@@ -6,7 +6,9 @@ export const END_POINTS = {
   GET_CUSTOMER_DETAILS: "api/customers",
   SAVE_MEAL_DETAILS: "api/create-meals",
   GET_MEAL_DETAILS: "api/get-meals/get",
-  SAVE_CART_DETAILS: "api/cart/add-to-cart",
+  SAVE_CART_DETAILS: "api/cart/add-to-cart" ,
+  UPDATE_CART_DETAILS: (cart_id) => `api/cart/update-cart/${cart_id}`, 
+  DELETE_CART_DETAILS: (cart_id) => `api/cart/delete-cart/${cart_id}`, 
   UPDATE_MEAL: "api/create-meals",
   DELETE_MEAL: "api/create-meals",
   UPDATE_CARD_DETAILS: (cardId) =>
