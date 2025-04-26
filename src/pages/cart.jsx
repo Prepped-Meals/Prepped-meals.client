@@ -4,6 +4,8 @@ import { ROUTES } from "../routes/paths";
 import cartBg from "../assets/images/crt2.jpg";
 import { CartContext } from "../context/cartContext";
 import { useSaveCart } from "../hooks/useSaveCartDetails";
+import { useEditCartDetails } from "../hooks/useEditCartDetails";
+import { useDeleteCartDetails } from "../hooks/useDeleteCartDetails";
 import { useAuth } from "../context/authContext";
 
 const Cart = () => {
@@ -15,8 +17,12 @@ const Cart = () => {
     JSON.parse(localStorage.getItem("cart")) || []
   );
   const [cartSaved, setCartSaved] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [cartId, setCartId] = useState(null);
 
-  const { mutate: saveCart, isLoading } = useSaveCart();
+  const { mutate: saveCart, isLoading: savingCart } = useSaveCart();
+  const { mutate: editCart, isLoading: editingCart } = useEditCartDetails();
+  const { mutate: deleteCart, isLoading: deletingCart } = useDeleteCartDetails();
 
   const handleSaveCart = () => {
     if (!user || !user._id) {
@@ -24,15 +30,17 @@ const Cart = () => {
       return;
     }
 
+    const generatedCartId = `cart_${Date.now()}`;
+
     const cartData = {
-      cart_id: `cart_${Date.now()}`,
+      cart_id: generatedCartId,
       customer: user._id,
       meals: cartItems.map((item) => ({
         meal: item.meal,
         meal_name: item.meal_name,
         meal_price: item.meal_price,
         quantity: item.quantity,
-        total_price: total,
+        total_price: item.total_price,
       })),
     };
 
@@ -40,6 +48,7 @@ const Cart = () => {
       onSuccess: () => {
         alert("Cart saved successfully!");
         setCartSaved(true);
+        setCartId(generatedCartId);
       },
       onError: () => {
         alert("Failed to save cart. Please try again.");
@@ -47,8 +56,68 @@ const Cart = () => {
     });
   };
 
+  const handleEditCart = () => {
+    setIsEditing(true);
+  };
+
+  const handleSaveEditedCart = () => {
+    if (!cartId) {
+      alert("No cart found to update. Please save cart first.");
+      return;
+    }
+
+    const updatedCartData = {
+      cart_id: cartId,
+      customer: user._id,
+      meals: cartItems.map((item) => ({
+        meal: item.meal,
+        meal_name: item.meal_name,
+        meal_price: item.meal_price,
+        quantity: item.quantity,
+        total_price: item.total_price,
+      })),
+    };
+
+    editCart(
+      { cart_id: cartId, updatedCartData },
+      {
+        onSuccess: () => {
+          alert("Cart updated successfully!");
+          setIsEditing(false);
+        },
+        onError: () => {
+          alert("Failed to update cart. Please try again.");
+        },
+      }
+    );
+  };
+
+  const handleDeleteCart = () => {
+    if (!cartId) {
+      alert("No saved cart to delete.");
+      return;
+    }
+
+    if (window.confirm("Are you sure you want to delete the cart?")) {
+      deleteCart(cartId, {
+        onSuccess: () => {
+          alert("Cart deleted successfully!");
+          localStorage.removeItem("cart");
+          setCartItems([]);
+          setCartSaved(false);
+          setIsEditing(false);
+          setCartId(null);
+          updateCart([]);
+        },
+        onError: () => {
+          alert("Failed to delete cart. Please try again.");
+        },
+      });
+    }
+  };
+
   const handleIncrease = (id) => {
-    if (cartSaved) return;
+    if (cartSaved && !isEditing) return;
     setCartItems(
       cartItems.map((item) =>
         item.meal === id
@@ -63,7 +132,7 @@ const Cart = () => {
   };
 
   const handleDecrease = (id) => {
-    if (cartSaved) return;
+    if (cartSaved && !isEditing) return;
     setCartItems(
       cartItems.map((item) =>
         item.meal === id && item.quantity > 1
@@ -78,14 +147,16 @@ const Cart = () => {
   };
 
   const handleRemove = (id) => {
-    if (cartSaved) return;
+    if (cartSaved && !isEditing) return;
     setCartItems(cartItems.filter((item) => item.meal !== id));
   };
 
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
-    updateCart(cartItems);
-  }, [cartItems, updateCart]);
+    if (!cartSaved || isEditing) {
+      localStorage.setItem("cart", JSON.stringify(cartItems));
+      updateCart(cartItems);
+    }
+  }, [cartItems, updateCart, cartSaved, isEditing]);
 
   const subtotal = cartItems.reduce(
     (total, item) => total + (item.total_price || 0),
@@ -128,25 +199,21 @@ const Cart = () => {
               {cartItems.map((item) => (
                 <tr key={item.meal} className="border-b">
                   <td className="p-2">{item.meal_name}</td>
-                  <td className="p-2">
-                    Rs: {item.meal_price?.toFixed(2) || "N/A"}
-                  </td>
+                  <td className="p-2">Rs: {item.meal_price?.toFixed(2) || "N/A"}</td>
                   <td className="p-2 text-center">{item.quantity}</td>
-                  <td className="p-2">
-                    Rs: {item.total_price?.toFixed(2) || "N/A"}
-                  </td>
+                  <td className="p-2">Rs: {item.total_price?.toFixed(2) || "N/A"}</td>
                   <td className="p-2 flex items-center space-x-2">
                     <button
                       onClick={() => handleIncrease(item.meal)}
                       className="px-2 py-1 bg-gray-300 rounded text-lg font-bold"
-                      disabled={cartSaved}
+                      disabled={cartSaved && !isEditing}
                     >
                       +
                     </button>
                     <button
                       onClick={() => handleDecrease(item.meal)}
                       className="px-2 py-1 bg-gray-300 rounded text-lg font-bold"
-                      disabled={cartSaved}
+                      disabled={cartSaved && !isEditing}
                     >
                       -
                     </button>
@@ -155,7 +222,7 @@ const Cart = () => {
                     <button
                       onClick={() => handleRemove(item.meal)}
                       className="text-gray-600 hover:text-red-500 text-lg"
-                      disabled={cartSaved}
+                      disabled={cartSaved && !isEditing}
                     >
                       🗑️
                     </button>
@@ -180,38 +247,65 @@ const Cart = () => {
             </div>
           </div>
 
-          <div className="flex justify-between mt-6">
-            <button
-              onClick={() => navigate(ROUTES.MENU)}
-              className={`${
-                cartSaved
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700"
-              } text-white px-4 py-2 rounded-lg transition`}
-              disabled={cartSaved}
-            >
-              Add more Meals
-            </button>
-            <button
-              onClick={() => navigate(ROUTES.PAYMENT)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              Proceed To Check Out
-            </button>
-          </div>
+          {cartItems.length > 0 && (
+            <div className="flex justify-between mt-6">
+              <button
+                onClick={() => navigate(ROUTES.MENU)}
+                className={`${
+                  cartSaved && !isEditing
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                } text-white px-4 py-2 rounded-lg transition`}
+                disabled={cartSaved && !isEditing}
+              >
+                Add more Meals
+              </button>
+              <button
+                onClick={() => navigate(ROUTES.PAYMENT)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                Proceed To Checkout
+              </button>
+            </div>
+          )}
 
-          <div className="mt-4 text-center">
-            <button
-              onClick={handleSaveCart}
-              disabled={isLoading || cartSaved}
-              className={`${
-                cartSaved
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-purple-600 hover:bg-purple-700"
-              } text-white px-6 py-2 rounded-lg transition`}
-            >
-              {isLoading ? "Saving..." : cartSaved ? "Cart Saved" : "Save Cart"}
-            </button>
+          <div className="mt-4 text-center space-x-4">
+            {!cartSaved && (
+              <button
+                onClick={handleSaveCart}
+                disabled={savingCart}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition"
+              >
+                {savingCart ? "Saving..." : "Save Cart"}
+              </button>
+            )}
+            {cartSaved && !isEditing && (
+              <>
+                <button
+                  onClick={handleEditCart}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg transition"
+                >
+                  Edit Cart
+                </button>
+
+                <button
+                  onClick={handleDeleteCart}
+                  disabled={deletingCart}
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition"
+                >
+                  {deletingCart ? "Deleting..." : "Delete Cart"}
+                </button>
+              </>
+            )}
+            {isEditing && (
+              <button
+                onClick={handleSaveEditedCart}
+                disabled={editingCart}
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition"
+              >
+                {editingCart ? "Saving Changes..." : "Save Edited Cart"}
+              </button>
+            )}
           </div>
         </div>
       </div>
