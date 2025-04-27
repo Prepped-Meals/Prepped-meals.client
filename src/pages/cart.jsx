@@ -28,8 +28,9 @@ const Cart = () => {
 
   const { mutate: saveCart, isLoading: savingCart } = useSaveCart();
   const { mutate: editCart, isLoading: editingCart } = useEditCartDetails();
-  const { mutate: deleteCart, isLoading: deletingCart } =
-    useDeleteCartDetails();
+  const { mutate: deleteCart, isLoading: deletingCart } = useDeleteCartDetails();
+
+  const isEditingAllowed = !cartSaved || isCartEditing;
 
   const handleSaveCart = () => {
     if (!user || !user._id) {
@@ -127,9 +128,9 @@ const Cart = () => {
   };
 
   const handleIncrease = (id) => {
-    if (cartSaved && !isCartEditing) return;
-    setCartItems(
-      cartItems.map((item) =>
+    if (!isEditingAllowed) return;
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
         item.meal === id
           ? {
               ...item,
@@ -142,9 +143,9 @@ const Cart = () => {
   };
 
   const handleDecrease = (id) => {
-    if (cartSaved && !isCartEditing) return;
-    setCartItems(
-      cartItems.map((item) =>
+    if (!isEditingAllowed) return;
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
         item.meal === id && item.quantity > 1
           ? {
               ...item,
@@ -157,8 +158,8 @@ const Cart = () => {
   };
 
   const handleRemove = (id) => {
-    if (cartSaved && !isCartEditing) return;
-    setCartItems(cartItems.filter((item) => item.meal !== id));
+    if (!isEditingAllowed) return;
+    setCartItems((prevItems) => prevItems.filter((item) => item.meal !== id));
   };
 
   useEffect(() => {
@@ -220,14 +221,14 @@ const Cart = () => {
                     <button
                       onClick={() => handleIncrease(item.meal)}
                       className="px-2 py-1 bg-gray-300 rounded text-lg font-bold"
-                      disabled={cartSaved && !isCartEditing}
+                      disabled={!isEditingAllowed}
                     >
                       +
                     </button>
                     <button
                       onClick={() => handleDecrease(item.meal)}
                       className="px-2 py-1 bg-gray-300 rounded text-lg font-bold"
-                      disabled={cartSaved && !isCartEditing}
+                      disabled={!isEditingAllowed}
                     >
                       -
                     </button>
@@ -236,7 +237,7 @@ const Cart = () => {
                     <button
                       onClick={() => handleRemove(item.meal)}
                       className="text-gray-600 hover:text-red-500 text-lg"
-                      disabled={cartSaved && !isCartEditing}
+                      disabled={!isEditingAllowed}
                     >
                       🗑️
                     </button>
@@ -266,17 +267,17 @@ const Cart = () => {
               <button
                 onClick={() => navigate(ROUTES.MENU)}
                 className={`${
-                  cartSaved && !isCartEditing
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
+                  isEditingAllowed
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-gray-400 cursor-not-allowed"
                 } text-white px-4 py-2 rounded-lg transition`}
-                disabled={cartSaved && !isCartEditing}
+                disabled={!isEditingAllowed}
               >
                 Add more Meals
               </button>
               <button
                 onClick={() => navigate(ROUTES.PAYMENT)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
               >
                 Proceed To Checkout
               </button>
@@ -288,16 +289,17 @@ const Cart = () => {
               <button
                 onClick={handleSaveCart}
                 disabled={savingCart}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition"
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition"
               >
                 {savingCart ? "Saving..." : "Save Cart"}
               </button>
             )}
+
             {cartSaved && !isCartEditing && (
               <>
                 <button
                   onClick={handleEditCart}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg transition"
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition"
                 >
                   Edit Cart
                 </button>
@@ -305,17 +307,18 @@ const Cart = () => {
                 <button
                   onClick={handleDeleteCart}
                   disabled={deletingCart}
-                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition"
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition"
                 >
                   {deletingCart ? "Deleting..." : "Delete Cart"}
                 </button>
               </>
             )}
+
             {isCartEditing && (
               <button
                 onClick={handleSaveEditedCart}
                 disabled={editingCart}
-                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition"
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition"
               >
                 {editingCart ? "Saving Changes..." : "Save Edited Cart"}
               </button>
