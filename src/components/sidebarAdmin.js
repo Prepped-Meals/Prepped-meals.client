@@ -1,6 +1,6 @@
 import {Link} from "react-router-dom";
 import {useState} from "react";
-import {FiHome, FiHeart, FiClipboard,FiUsers,FiLogOut  } from "react-icons/fi";
+import {FiHome, FiHeart, FiClipboard,FiUsers,FiLogOut , FiMessageCircle } from "react-icons/fi";
 import profilePic from '../assets/images/pro.png';
 import { ROUTES } from "../routes/paths";
 
@@ -12,8 +12,8 @@ const SidebarAdmin = () => {
         {name : "Dashboard", icon: <FiHome size= {20}/>, path: ROUTES.DASHBOARD_ADMIN},
         {name: "Orders", icon:<FiClipboard size={20}/>, path: "/pages/orders"},
         {name: "Meals", icon: <FiHeart size={20}/>, path: ROUTES.MEALS_ADMIN},
-        {name: "Customers", icon: <FiUsers size={20}/>, path:"/pages/customersAdmin"},
-        {name: "Feedback", icon: <FiUsers size={20}/>, path:"/pages/feedback"},
+        {name: "Customers", icon: <FiUsers size={20}/>, path:ROUTES.ADMIN_CUSTOMER},
+        {name: "Feedback", icon: <FiMessageCircle size={20}/>, path: ROUTES.ADMIN_FEEDBACK},
         {name: "Logout", icon: <FiLogOut  size={20}/>, path:ROUTES.LOGOUT_ADMIN},
 
     ];
