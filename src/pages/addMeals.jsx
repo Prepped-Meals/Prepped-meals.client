@@ -100,29 +100,38 @@ const AddMeals = () => {
 
           <div className="mb-4">
             <label className="block mb-1 font-semibold">Price</label>
-            <input
-              type="number"
-              name="meal_price"
-              className="w-full p-2 border-2 rounded-lg border-green-500"
-              placeholder="Enter price"
-              value={formData.meal_price}
-              onChange={handleChange}
-              required
+              <div className="flex items-center border-2 rounded-lg border-green-500 overflow-hidden">
+                <span className="px-5 py-4 bg-green-500 text-white font-semibold">Rs.</span>
+          <input
+            type="number"
+            name="meal_price"
+            className="w-full p-2 outline-none"
+            placeholder="Enter price"
+            value={formData.meal_price}
+            onChange={handleChange}
+            min="0"
+            required
             />
-          </div>
+        </div>
+    </div>
 
-          <div className="mb-4">
-            <label className="block mb-1 font-semibold">Calories</label>
-            <input
-              type="number"
-              name="calorie_count"
-              className="w-full p-2 border-2 rounded-lg border-green-500"
-              placeholder="Enter calories"
-              value={formData.calorie_count}
-              onChange={handleChange}
-              required
-            />
-          </div>
+    <div className="mb-4">
+  <label className="block mb-1 font-semibold">Calories</label>
+  <div className="flex items-center border-2 rounded-lg border-green-500 overflow-hidden">
+    <input
+      type="number"
+      name="calorie_count"
+      className="w-full p-2 outline-none"
+      placeholder="Enter calories"
+      value={formData.calorie_count}
+      onChange={handleChange}
+      min="0"
+      step="1" // prevent decimal points
+      required
+    />
+    <span className="px-3 py-4 bg-green-500 text-white font-semibold">Kcal</span>
+  </div>
+</div>
 
           <div className="mb-4">
             <label className="block mb-1 font-semibold">Admin</label>

@@ -17,6 +17,7 @@ import ResetPassword from "../pages/ResetPassword";
 import OrdersPage from "../pages/orders"; 
 import DashboardAdmin from "../pages/adminDashboard";
 import FeedbackPage from "../pages/feedback"; 
+import AdminFeedbackPage from "../pages/adminFeedbacks";
 
 
 
@@ -91,7 +92,14 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.LOGOUT_ADMIN,
         element: <SignIn />,
-      }
+      },
+
+      {
+        path: ROUTES.ADMIN_FEEDBACK,
+        element : <AdminFeedbackPage/>,
+      },
+
+
     ],
   },
 ]);
