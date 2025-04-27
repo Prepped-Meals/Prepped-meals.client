@@ -16,6 +16,7 @@ const ResetPassword = () => {
   });
 
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState({});
 
   const toggleVisibility = (field) => {
     setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
@@ -23,13 +24,46 @@ const ResetPassword = () => {
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" })); // clear error on change
+  };
+
+
+  //validations
+  const validate = () => {
+    const newErrors = {};
+    const { currentPassword, newPassword, confirmPassword } = formData;
+
+    // 1. Current password required
+    if (!currentPassword.trim()) {
+      newErrors.currentPassword = "Current password is required.";
+    }
+
+    // 2. New password required
+    if (!newPassword.trim()) {
+      newErrors.newPassword = "New password is required.";
+    } else if (newPassword.length < 6) {
+      newErrors.newPassword = "Password must be at least 6 characters.";
+    } else if (newPassword === currentPassword) {
+      newErrors.newPassword = "New password must be different from current password.";
+    }
+
+    // 3. Confirm password required
+    if (!confirmPassword.trim()) {
+      newErrors.confirmPassword = "Please confirm your new password.";
+    } else if (newPassword !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.newPassword !== formData.confirmPassword) {
-      return setMessage("New passwords do not match");
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
     }
 
     try {
@@ -44,6 +78,7 @@ const ResetPassword = () => {
         newPassword: "",
         confirmPassword: "",
       });
+      setErrors({});
     } catch (error) {
       const err = error.response?.data?.error || "Something went wrong";
       setMessage(err);
@@ -82,7 +117,11 @@ const ResetPassword = () => {
                   name={name}
                   value={formData[name]}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 text-sm text-[#004225] bg-[#f3f6f1] border border-[#bfcab3] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#004225] pr-10 transition-all duration-200"
+                  className={`w-full px-4 py-2 text-sm text-[#004225] bg-[#f3f6f1] border ${
+                    errors[name] ? "border-red-400" : "border-[#bfcab3]"
+                  } rounded-xl focus:outline-none focus:ring-2 ${
+                    errors[name] ? "focus:ring-red-500" : "focus:ring-[#004225]"
+                  } pr-10 transition-all duration-200`}
                   required
                 />
                 <button
@@ -93,6 +132,7 @@ const ResetPassword = () => {
                   {showPassword[field] ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {errors[name] && <p className="text-xs text-red-500 mt-1">{errors[name]}</p>}
             </div>
           ))}
 

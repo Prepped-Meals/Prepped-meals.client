@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import signupImage from "../assets/images/SignUpImage.jpg";
 import Button from "../components/button.js";
 import { useSaveCusDetails } from "../hooks/useSaveCusDetails";
-import { useAuth } from "../context/authContext";
 import { ROUTES } from "../routes/paths";
 
 function SignUp() {
@@ -18,8 +17,8 @@ function SignUp() {
   });
 
   const navigate = useNavigate();
-  const { login } = useAuth(); 
   const saveCustomerMutation = useSaveCusDetails();
+
 
   const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
   const validatePhone = (phone) => /^\d{10}$/.test(phone);
@@ -30,6 +29,7 @@ function SignUp() {
     setFormData({ ...formData, [name]: value });
   };
 
+  //validations
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -55,12 +55,10 @@ function SignUp() {
 
 
     try {
-      const { data } = await saveCustomerMutation.mutateAsync(formData);
-      alert("Signup successful!");
+      await saveCustomerMutation.mutateAsync(formData);
+      alert("Signup successful! Please log in to continue");
 
-      // auto login user
-      login(data); 
-
+      
       setFormData({
         f_name: '',
         l_name: '',
@@ -71,7 +69,7 @@ function SignUp() {
         confirmPassword: ''
       });
 
-      navigate(ROUTES.MENU); // redirect to menu page
+      navigate(ROUTES.SIGN_IN); // redirect to sign in page
     } catch (error) {
       console.error('Error:', error);
       alert("An error occurred. Please try again.");
