@@ -31,7 +31,9 @@ const MealPopup = ({ meal, onClose, onUpdate, onDelete }) => {
                         <p><span className="font-semibold">Meal ID:</span> #{meal.meal_id}</p>
                         <p><span className="font-semibold">Name:</span> {meal.meal_name}</p>
                         <p><span className="font-semibold">Price:</span> Rs. {meal.meal_price}</p>
+                        <p><span className="font-semibold">Meal Stock: </span>{meal.meal_stock}</p>
                         <p><span className="font-semibold">Calories:</span> {meal.calorie_count} kcal</p>
+
 
                         <p className="mt-2"><span className="font-semibold">Description:</span></p>
                         <p className="text-sm text-gray-700">{meal.meal_description}</p>

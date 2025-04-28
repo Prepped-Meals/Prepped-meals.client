@@ -10,6 +10,7 @@ const AddMeals = () => {
     calorie_count: '',
     admin: '',
     meal_image: null, // ✅ image field
+    meal_stock: '', // Added meal stock field
   });
 
   const [imagePreview, setImagePreview] = useState(null); // Optional: for preview
@@ -43,6 +44,7 @@ const AddMeals = () => {
     submissionData.append("meal_price", formData.meal_price);
     submissionData.append("calorie_count", formData.calorie_count);
     submissionData.append("admin", formData.admin);
+    submissionData.append("meal_stock", formData.meal_stock); // Sending meal stock data
 
     if (formData.meal_image) {
       submissionData.append("meal_image", formData.meal_image); // ✅ send image
@@ -57,6 +59,7 @@ const AddMeals = () => {
         meal_price: '',
         calorie_count: '',
         admin: '',
+        meal_stock: '', // Reset meal stock
         meal_image: null,
       });
       setImagePreview(null);
@@ -100,38 +103,38 @@ const AddMeals = () => {
 
           <div className="mb-4">
             <label className="block mb-1 font-semibold">Price</label>
-              <div className="flex items-center border-2 rounded-lg border-green-500 overflow-hidden">
-                <span className="px-5 py-4 bg-green-500 text-white font-semibold">Rs.</span>
-          <input
-            type="number"
-            name="meal_price"
-            className="w-full p-2 outline-none"
-            placeholder="Enter price"
-            value={formData.meal_price}
-            onChange={handleChange}
-            min="0"
-            required
-            />
-        </div>
-    </div>
+            <div className="flex items-center border-2 rounded-lg border-green-500 overflow-hidden">
+              <span className="px-5 py-4 bg-green-500 text-white font-semibold">Rs.</span>
+              <input
+                type="number"
+                name="meal_price"
+                className="w-full p-2 outline-none"
+                placeholder="Enter price"
+                value={formData.meal_price}
+                onChange={handleChange}
+                min="0"
+                required
+              />
+            </div>
+          </div>
 
-    <div className="mb-4">
-  <label className="block mb-1 font-semibold">Calories</label>
-  <div className="flex items-center border-2 rounded-lg border-green-500 overflow-hidden">
-    <input
-      type="number"
-      name="calorie_count"
-      className="w-full p-2 outline-none"
-      placeholder="Enter calories"
-      value={formData.calorie_count}
-      onChange={handleChange}
-      min="0"
-      step="1" // prevent decimal points
-      required
-    />
-    <span className="px-3 py-4 bg-green-500 text-white font-semibold">Kcal</span>
-  </div>
-</div>
+          <div className="mb-4">
+            <label className="block mb-1 font-semibold">Calories</label>
+            <div className="flex items-center border-2 rounded-lg border-green-500 overflow-hidden">
+              <input
+                type="number"
+                name="calorie_count"
+                className="w-full p-2 outline-none"
+                placeholder="Enter calories"
+                value={formData.calorie_count}
+                onChange={handleChange}
+                min="0"
+                step="1" // prevent decimal points
+                required
+              />
+              <span className="px-3 py-4 bg-green-500 text-white font-semibold">Kcal</span>
+            </div>
+          </div>
 
           <div className="mb-4">
             <label className="block mb-1 font-semibold">Admin</label>
@@ -142,6 +145,20 @@ const AddMeals = () => {
               placeholder="Enter admin"
               value={formData.admin}
               onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block mb-1 font-semibold">Meal Stock</label>
+            <input
+              type="number"
+              name="meal_stock"
+              className="w-full p-2 border-2 rounded-lg border-green-500"
+              placeholder="Enter stock quantity"
+              value={formData.meal_stock}
+              onChange={handleChange}
+              min="0"
               required
             />
           </div>
