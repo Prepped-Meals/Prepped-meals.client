@@ -14,11 +14,17 @@ import { ROUTES } from "./paths";
 import CardPayment from "../pages/cardPayment";
 import CustomerProfile from "../pages/customerProfile";
 import ResetPassword from "../pages/ResetPassword";
-import OrdersPage from "../pages/orders"; 
+import OrdersPage from "../pages/orders";
 import DashboardAdmin from "../pages/adminDashboard";
 import FeedbackPage from "../pages/feedback"; 
+import CalorieReport from "../pages/CalorieReport"; 
+import RegistrationReport from "../pages/registrationReport";
+import CustomerList from '../pages/CustomerList';
 import AdminFeedbackPage from "../pages/adminFeedbacks";
 import AdminMealReports from "../pages/adminMealReports";
+import AdminOrders from "../pages/adminorders";
+import AdminPaymentPage from "../pages/adminPayment";
+
 
 
 
@@ -61,7 +67,7 @@ export const router = createBrowserRouter([
       },
       {
         path: ROUTES.CARDPAYMENT,
-        element: <CardPayment/>,
+        element: <CardPayment />,
       },
 
       {
@@ -76,18 +82,17 @@ export const router = createBrowserRouter([
 
       {
         path: ROUTES.DASHBOARD_ADMIN,
-        element: <DashboardAdmin/>
+        element: <DashboardAdmin />,
       },
-      
+
       {
         path: ROUTES.MYORDERS,
-        element: <OrdersPage />, 
+        element: <OrdersPage />,
       },
 
       {
         path: ROUTES.CUSTOMER_FEEDBACK,
         element: <FeedbackPage />,
-        
       },
 
       {
@@ -96,8 +101,8 @@ export const router = createBrowserRouter([
       },
 
       {
-        path: ROUTES.ADMIN_FEEDBACK,
-        element : <AdminFeedbackPage/>,
+        path: ROUTES.CALORIE_REPORT,
+        element: <CalorieReport />,
       },
 
       {
@@ -105,7 +110,30 @@ export const router = createBrowserRouter([
         element : <AdminMealReports/>,
       },
 
+      {
 
+        path: ROUTES.REGISTRATION_REPORT,
+        element: <RegistrationReport/>,
+      },
+
+      {
+        path: ROUTES.CUSTOMER_LIST,
+        element: <CustomerList/>,
+      },
+
+      {
+        path: ROUTES.ADMIN_FEEDBACK,
+        element: <AdminFeedbackPage />,
+      },
+
+      {
+        path: ROUTES.ADMIN_ORDERS,
+        element: <AdminOrders />,
+      },
+      {
+        path: ROUTES.ADMIN_PAYMENTS,
+        element: <AdminPaymentPage />,
+      },
     ],
   },
 ]);

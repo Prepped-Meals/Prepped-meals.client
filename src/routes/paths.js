@@ -16,6 +16,10 @@ export const ROUTES = {
     LOGOUT_ADMIN : "/SignIn",
     ORDER : "/orders",
     ADMIN_FEEDBACK : "/adminFeedbacks",
-    ADMIN_CUSTOMER : "/adminCustomer",
     ADMIN_MEALREPORT : "/adminMealReports",
+    CALORIE_REPORT: "/CalorieReport",
+    REGISTRATION_REPORT: "/RegistrationReport",
+    CUSTOMER_LIST: "/CustomersList",
+    ADMIN_ORDERS: "/adminorders",
+    ADMIN_PAYMENTS: "/adminPayments",
 };

@@ -1,0 +1,25 @@
+import { apiClient } from "../api/apiClient";
+import { END_POINTS } from "../api/endPoints";
+
+export const downloadOrderStatusReport = async () => {
+  try {
+    const response = await apiClient.get(END_POINTS.GET_ORDER_STATUS_REPORT, {
+      responseType: "blob", // important for PDF download
+    });
+
+    // Create a blob link to download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "Order_Status_Report.pdf"); // set filename
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+  } catch (error) {
+    console.error("Failed to download the order status report:", error);
+    alert("Failed to download Order Status Report. Please try again.");
+  }
+};
