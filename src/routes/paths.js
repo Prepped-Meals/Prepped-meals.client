@@ -17,4 +17,5 @@ export const ROUTES = {
     ORDER : "/orders",
     ADMIN_FEEDBACK : "/adminFeedbacks",
     ADMIN_CUSTOMER : "/adminCustomer",
+    ADMIN_ORDERS : "/adminorders"
 };

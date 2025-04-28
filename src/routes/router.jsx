@@ -18,7 +18,7 @@ import OrdersPage from "../pages/orders";
 import DashboardAdmin from "../pages/adminDashboard";
 import FeedbackPage from "../pages/feedback"; 
 import AdminFeedbackPage from "../pages/adminFeedbacks";
-
+import AdminOrders from "../pages/adminorders";
 
 
 export const router = createBrowserRouter([
@@ -97,6 +97,11 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.ADMIN_FEEDBACK,
         element : <AdminFeedbackPage/>,
+      },
+
+      {
+        path: ROUTES.ADMIN_ORDERS,
+        element : <AdminOrders/>,
       },
 
 

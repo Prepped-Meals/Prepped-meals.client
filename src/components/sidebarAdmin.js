@@ -10,7 +10,7 @@ const SidebarAdmin = () => {
 
     const menuItems = [
         {name : "Dashboard", icon: <FiHome size= {20}/>, path: ROUTES.DASHBOARD_ADMIN},
-        {name: "Orders", icon:<FiClipboard size={20}/>, path: "/pages/orders"},
+        {name: "Orders", icon:<FiClipboard size={20}/>, path: ROUTES.ADMIN_ORDERS},
         {name: "Meals", icon: <FiHeart size={20}/>, path: ROUTES.MEALS_ADMIN},
         {name: "Customers", icon: <FiUsers size={20}/>, path:ROUTES.ADMIN_CUSTOMER},
         {name: "Feedback", icon: <FiMessageCircle size={20}/>, path: ROUTES.ADMIN_FEEDBACK},
