@@ -7,18 +7,32 @@ const UpdateMealPopup = ({ meal, onClose, onSubmit }) => {
   const [mealPrice, setMealPrice] = useState(meal.meal_price || '');
   const [mealCalories, setMealCalories] = useState(meal.calorie_count || '');
   const [mealDescription, setMealDescription] = useState(meal.meal_description || '');
-  const [mealStock, setMealStock] = useState(meal.meal_stock || ''); // Added meal stock state
+  const [mealStock, setMealStock] = useState(meal.meal_stock || '');
   const [mealImage, setMealImage] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validations for negative numbers
+    if (parseFloat(mealPrice) < 0) {
+      alert("Meal price cannot be less than 0.");
+      return;
+    }
+    if (parseInt(mealCalories) < 0) {
+      alert("Calories cannot be less than 0.");
+      return;
+    }
+    if (parseInt(mealStock) < 0) {
+      alert("Stock cannot be less than 0.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append('meal_name', mealName);
     formData.append('meal_price', mealPrice);
     formData.append('calorie_count', mealCalories);
     formData.append('meal_description', mealDescription);
-    formData.append('meal_stock', mealStock); // Append meal stock to form data
+    formData.append('meal_stock', mealStock);
     if (mealImage) {
       formData.append('meal_image', mealImage);
     }

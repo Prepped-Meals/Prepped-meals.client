@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Button from "../components/button.js";
 import { useAuth } from "../context/authContext"; 
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+
+const CALORIE_REPORT = "/calorieReport"; // Define the constant for the path
 
 const CustomerProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -16,7 +19,9 @@ const CustomerProfile = () => {
 
   const [errors, setErrors] = useState({});
   const [attemptedSave, setAttemptedSave] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
   const { logout } = useAuth(); 
+  const navigate = useNavigate(); // Initialize useNavigate hook
 
   const fetchProfile = async () => {
     try {
@@ -71,10 +76,9 @@ const CustomerProfile = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-        setProfileData({ ...profileData, [name]: value });
+    setProfileData({ ...profileData, [name]: value });
   };
 
   const handleEdit = () => {
@@ -153,6 +157,25 @@ const CustomerProfile = () => {
     }
   };
 
+  // Modal handlers
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleReportOption = (reportType) => {
+    console.log("Report option clicked:", reportType); // Debugging line
+    if (reportType === "Calorie Consumption") {
+      // Use the CALORIE_REPORT constant for the path
+      navigate(CALORIE_REPORT);
+    }
+    closeModal(); // Close the modal after selection
+  };
+  
+
   return (
     <div className="bg-[#f5f7f3] min-h-screen flex items-center justify-center py-10 px-6">
       <div className="w-full max-w-4xl bg-white rounded-[2rem] shadow-xl flex flex-col md:flex-row overflow-hidden relative">
@@ -183,6 +206,7 @@ const CustomerProfile = () => {
               <Button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700">Save</Button>
             )}
             <Button onClick={handleDeleteAccount} className="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700">Delete Account</Button>
+            <Button onClick={openModal} className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700">Reports</Button>
           </div>
         </div>
 
@@ -217,14 +241,36 @@ const CustomerProfile = () => {
               value={profileData.username}
               onChange={handleChange}
               disabled={!isEditing}
-              className="mt-1 p-2 w-full border rounded-lg bg-gray-100"
+              className={`mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 ${
+                errors.username && attemptedSave
+                  ? 'border-red-500 ring-red-300'
+                  : 'focus:ring-[#1D6A26]'
+              } bg-white`}
             />
+            {errors.username && attemptedSave && (
+              <p className="text-sm text-red-600 mt-1">{errors.username}</p>
+            )}
           </div>
         </div>
-
-        <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#d0e8c3] rounded-full opacity-50 -z-10"></div>
-        <div className="absolute -bottom-16 -right-10 w-40 h-40 bg-[#e4f0d8] rounded-full opacity-50 -z-10"></div>
       </div>
+
+      {/* Modal for reports */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-semibold">Select a Report</h3>
+            <Button
+              onClick={() => handleReportOption("Calorie Consumption")}
+              className="w-full bg-green-600 text-white px-4 py-2 rounded-full mb-3"
+            >
+              Calorie Consumption
+            </Button>
+            <Button onClick={closeModal} className="w-full bg-gray-600 text-white px-4 py-2 rounded-full">
+              Close
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
