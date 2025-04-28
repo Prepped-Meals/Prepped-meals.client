@@ -15,7 +15,10 @@ export const ROUTES = {
     CUSTOMER_FEEDBACK : "/feedback",
     LOGOUT_ADMIN : "/SignIn",
     ORDER : "/orders",
+    ADMIN_FEEDBACK: "/adminFeedbacks",
     CALORIE_REPORT: "/CalorieReport",
     REGISTRATION_REPORT: "/RegistrationReport",
     CUSTOMER_LIST: "/CustomersList",
+    ADMIN_ORDERS: "/adminorders",
+    ADMIN_PAYMENTS: "/adminPayments",
 };

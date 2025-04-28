@@ -7,6 +7,7 @@ const UpdateMealPopup = ({ meal, onClose, onSubmit }) => {
   const [mealPrice, setMealPrice] = useState(meal.meal_price || '');
   const [mealCalories, setMealCalories] = useState(meal.calorie_count || '');
   const [mealDescription, setMealDescription] = useState(meal.meal_description || '');
+  const [mealStock, setMealStock] = useState(meal.meal_stock || ''); // Added meal stock state
   const [mealImage, setMealImage] = useState(null);
 
   const handleSubmit = async (e) => {
@@ -17,6 +18,7 @@ const UpdateMealPopup = ({ meal, onClose, onSubmit }) => {
     formData.append('meal_price', mealPrice);
     formData.append('calorie_count', mealCalories);
     formData.append('meal_description', mealDescription);
+    formData.append('meal_stock', mealStock); // Append meal stock to form data
     if (mealImage) {
       formData.append('meal_image', mealImage);
     }
@@ -94,6 +96,15 @@ const UpdateMealPopup = ({ meal, onClose, onSubmit }) => {
               onChange={(e) => setMealDescription(e.target.value)}
               className="border border-green-500 focus:border-green-600 focus:ring-green-500 focus:outline-none focus:ring-1 p-2 rounded-md"
               rows="3"
+              required
+            />
+
+            <label className="text-sm font-medium text-gray-700">Meal Stock</label>
+            <input
+              type="number"
+              value={mealStock}
+              onChange={(e) => setMealStock(e.target.value)}
+              className="border border-green-500 focus:border-green-600 focus:ring-green-500 focus:outline-none focus:ring-1 p-2 rounded-md"
               required
             />
 

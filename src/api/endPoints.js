@@ -17,4 +17,5 @@ export const END_POINTS = {
     `api/card-details/delete-payment-card/${cardId}`,
   GET_ORDER_DETAILS:`api/orders/get-all-orders`,
   SAVE_ORDER_DETAILS: "api/orders/add-order",
+  GET_PAYMENT_REPORT: "api/payments/weekly-report",
 };
