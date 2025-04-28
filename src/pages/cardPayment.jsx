@@ -28,8 +28,14 @@ const CardPayment = () => {
   const [isCardSaved, setIsCardSaved] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  const [cardHolderNameError, setCardHolderNameError] = useState("");
+  const [cardNumberError, setCardNumberError] = useState("");
+  const [expiryDateError, setExpiryDateError] = useState("");
+  const [cvvError, setCvvError] = useState("");
+
   const handleSaveCard = async (e) => {
     e.preventDefault();
+    if (!validateFields()) return;
 
     if (cardHolderName && cardNumber && expiryDate && cvv) {
       saveCardDetails(
@@ -54,6 +60,48 @@ const CardPayment = () => {
     } else {
       alert("Please fill in all Card details.");
     }
+  };
+
+  const validateFields = () => {
+    let isValid = true;
+
+    if (!cardHolderName.trim()) {
+      setCardHolderNameError("Cardholder name is required.");
+      isValid = false;
+    } else {
+      setCardHolderNameError("");
+    }
+
+    if (!/^\d{4} \d{4} \d{4} \d{4}$/.test(cardNumber)) {
+      setCardNumberError(
+        "Card number must be 16 digits (xxxx xxxx xxxx xxxx)."
+      );
+      isValid = false;
+    } else {
+      setCardNumberError("");
+    }
+
+    if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+      setExpiryDateError("Expiry date must be in MM/YY format.");
+      isValid = false;
+    } else {
+      const [month] = expiryDate.split("/").map(Number);
+      if (month < 1 || month > 12) {
+        setExpiryDateError("Invalid expiry month.");
+        isValid = false;
+      } else {
+        setExpiryDateError("");
+      }
+    }
+
+    if (!/^\d{3}$/.test(cvv)) {
+      setCvvError("CVV must be exactly 3 digits.");
+      isValid = false;
+    } else {
+      setCvvError("");
+    }
+
+    return isValid;
   };
 
   const handleEditClick = () => {
@@ -208,8 +256,12 @@ const CardPayment = () => {
                 value={cardHolderName}
                 onChange={(e) => setCardHolderName(e.target.value)}
                 disabled={isInputDisabled}
-                required
               />
+              {cardHolderNameError && (
+                <div style={{ color: "red", fontSize: "12px" }}>
+                  {cardHolderNameError}
+                </div>
+              )}
             </div>
           </div>
 
@@ -225,10 +277,18 @@ const CardPayment = () => {
                 className="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
                 placeholder="1234 5678 9012 3456"
                 value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value)}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, "");
+                  value = value.match(/.{1,4}/g)?.join(" ") || value;
+                  setCardNumber(value);
+                }}
                 disabled={isInputDisabled}
-                required
               />
+              {cardNumberError && (
+                <div style={{ color: "red", fontSize: "12px" }}>
+                  {cardNumberError}
+                </div>
+              )}
             </div>
           </div>
 
@@ -245,10 +305,20 @@ const CardPayment = () => {
                   className="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
                   placeholder="MM/YY"
                   value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/\D/g, "");
+                    if (value.length >= 3) {
+                      value = value.slice(0, 2) + "/" + value.slice(2, 4);
+                    }
+                    setExpiryDate(value);
+                  }}
                   disabled={isInputDisabled}
-                  required
                 />
+                {expiryDateError && (
+                  <div style={{ color: "red", fontSize: "12px" }}>
+                    {expiryDateError}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex-1">
@@ -264,8 +334,13 @@ const CardPayment = () => {
                   value={cvv}
                   onChange={(e) => setCvv(e.target.value)}
                   disabled={isInputDisabled}
-                  required
+                  // required
                 />
+                {cvvError && (
+                  <div style={{ color: "red", fontSize: "12px" }}>
+                    {cvvError}
+                  </div>
+                )}
               </div>
             </div>
           </div>
