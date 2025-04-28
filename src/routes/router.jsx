@@ -17,6 +17,10 @@ import ResetPassword from "../pages/ResetPassword";
 import OrdersPage from "../pages/orders"; 
 import DashboardAdmin from "../pages/adminDashboard";
 import FeedbackPage from "../pages/feedback"; 
+import CalorieReport from "../pages/CalorieReport"; 
+import RegistrationReport from "../pages/registrationReport";
+import CustomerList from '../pages/CustomerList';
+
 
 
 
@@ -91,6 +95,21 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.LOGOUT_ADMIN,
         element: <SignIn />,
+      },
+
+      {
+        path: ROUTES.CALORIE_REPORT,
+        element: <CalorieReport />,
+      },
+
+      {
+        path: ROUTES.REGISTRATION_REPORT,
+        element: <RegistrationReport/>,
+      },
+
+      {
+        path: ROUTES.CUSTOMER_LIST,
+        element: <CustomerList/>,
       }
     ],
   },

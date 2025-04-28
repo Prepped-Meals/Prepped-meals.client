@@ -15,4 +15,7 @@ export const ROUTES = {
     CUSTOMER_FEEDBACK : "/feedback",
     LOGOUT_ADMIN : "/SignIn",
     ORDER : "/orders",
+    CALORIE_REPORT: "/CalorieReport",
+    REGISTRATION_REPORT: "/RegistrationReport",
+    CUSTOMER_LIST: "/CustomersList",
 };
