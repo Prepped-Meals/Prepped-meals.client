@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import SidebarAdmin from '../components/sidebarAdmin';
 import Header from '../components/headerAdmin';
-import feedbackBackground from '../assets/images/feedback.avif';
+import feedbackBackground from '../assets/images/bg.jpg';
 
 const AdminFeedbackPage = () => {
   const [feedbacks, setFeedbacks] = useState([]);

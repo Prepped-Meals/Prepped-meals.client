@@ -18,6 +18,7 @@ import OrdersPage from "../pages/orders";
 import DashboardAdmin from "../pages/adminDashboard";
 import FeedbackPage from "../pages/feedback"; 
 import AdminFeedbackPage from "../pages/adminFeedbacks";
+import AdminMealReports from "../pages/adminMealReports";
 
 
 
@@ -97,6 +98,11 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.ADMIN_FEEDBACK,
         element : <AdminFeedbackPage/>,
+      },
+
+      {
+        path: ROUTES.ADMIN_MEALREPORT,
+        element : <AdminMealReports/>,
       },
 
 
