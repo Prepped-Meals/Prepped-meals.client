@@ -12,6 +12,7 @@ const Menu = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cartQuantities, setCartQuantities] = useState({});
+  const [alertMessage, setAlertMessage] = useState(""); // To show alert for stock issues
 
   useEffect(() => {
     const fetchMeals = async () => {
@@ -49,17 +50,26 @@ const Menu = () => {
   }, []);
 
   const handleAddToCart = (meal) => {
-    const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
+    if (meal.meal_stock <= 0) {
+      setAlertMessage(`Sorry, ${meal.meal_name} is out of stock.`);
+      return;
+    }
 
+    const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
     const existingIndex = existingCart.findIndex(
       (item) => item.meal === meal._id
     );
 
     if (existingIndex !== -1) {
-      existingCart[existingIndex].quantity += 1;
-      existingCart[existingIndex].total_price =
-        existingCart[existingIndex].meal_price *
-        existingCart[existingIndex].quantity;
+      if (existingCart[existingIndex].quantity < meal.meal_stock) {
+        existingCart[existingIndex].quantity += 1;
+        existingCart[existingIndex].total_price =
+          existingCart[existingIndex].meal_price *
+          existingCart[existingIndex].quantity;
+      } else {
+        setAlertMessage(`Cannot add more of ${meal.meal_name}. Not enough stock.`);
+        return;
+      }
     } else {
       existingCart.push({
         meal: meal._id,
@@ -119,6 +129,21 @@ const Menu = () => {
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <h1 className="text-4xl font-extrabold text-black mb-8">Menu Page</h1>
+
+      {/* Alert Popup for Stock Issues */}
+      {alertMessage && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-80 text-center">
+            <p className="text-red-500 font-semibold mb-4">{alertMessage}</p>
+            <button
+              onClick={() => setAlertMessage("")}
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-lg text-white">Loading meals...</p>

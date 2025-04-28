@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate , Link} from "react-router-dom";
 import Button from "../components/button";
 import { ROUTES } from '../routes/paths';
 import SidebarAdmin from '../components/sidebarAdmin';
@@ -7,6 +7,8 @@ import { useFetchMeals } from '../hooks/useFetchMeals';
 import HeaderAdmin from '../components/headerAdmin'; 
 import MealPopup from '../components/mealpopup';
 import UpdateMealPopup from '../components/updateMealpop';
+
+
 
 const MealsAdmin = () => {
     const aNavigate = useNavigate();
@@ -102,7 +104,9 @@ const MealsAdmin = () => {
                     <div className="bg-yellow-100 p-4 rounded-lg shadow-md" style={{ minHeight: '80vh' }}>
                         <div className="flex gap-4 flex-wrap">
                             <Button onClick={handleAddMealClick} className="bg-green-700 text-white mt-4">Add Meals</Button>
+                            <Link to = {ROUTES.ADMIN_MEALREPORT}> 
                             <Button className="bg-green-700 text-white mt-4">Reports</Button>
+                            </Link>
                         </div>
 
                         <h1 className="text-xl font-bold mb-4 mt-10">MEALS ADDED</h1>
@@ -122,7 +126,7 @@ const MealsAdmin = () => {
                                         <p className="text-sm font-semibold text-gray-600">#{meal.meal_id || 'N/A'}</p>
                                         <h2 className="text-lg font-bold mb-1">{meal.meal_name || 'Unnamed Meal'}</h2>
                                         <p className="text-gray-800">Rs. {meal.meal_price || 'Price not available'}</p>
-                                        <p className="text-sm text-gray-500 text-center">{meal.meal_description || 'No description available'}</p>
+                                        <p className="text-sm text-gray-500 text-center whitespace-pre-line">{meal.meal_description || 'No description available'}</p>
                                     </div>
                                 ))}
                             </div>

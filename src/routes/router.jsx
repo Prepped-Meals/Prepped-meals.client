@@ -21,6 +21,7 @@ import CalorieReport from "../pages/CalorieReport";
 import RegistrationReport from "../pages/registrationReport";
 import CustomerList from '../pages/CustomerList';
 import AdminFeedbackPage from "../pages/adminFeedbacks";
+import AdminMealReports from "../pages/adminMealReports";
 import AdminOrders from "../pages/adminorders";
 import AdminPaymentPage from "../pages/adminPayment";
 
@@ -105,6 +106,12 @@ export const router = createBrowserRouter([
       },
 
       {
+        path: ROUTES.ADMIN_MEALREPORT,
+        element : <AdminMealReports/>,
+      },
+
+      {
+
         path: ROUTES.REGISTRATION_REPORT,
         element: <RegistrationReport/>,
       },

@@ -30,7 +30,7 @@ const SidebarAdmin = () => {
 
 
 return (
-  <div className="h-screen w-64 bg-green-100 p-4 flex flex-col items-center">
+  <div className="min-h-screen w-64 bg-green-100 p-4 flex flex-col items-center">
     {/* Profile Section */}
     <div className="flex flex-col items-center mb-6">
       <label htmlFor="profile-upload" className="cursor-pointer">
