@@ -10,7 +10,11 @@ function App() {
   location.pathname.startsWith("/admin") ||
   location.pathname === "/DashboardAdmin" ||
   location.pathname === "/addMeals" ||
-  location.pathname === "/mealsAdmin" ;
+  location.pathname === "/mealsAdmin"||
+  location.pathname === "/CustomersList"||
+  location.pathname === "/RegistrationReport" ;
+  
+ 
 
   return (
     <>
