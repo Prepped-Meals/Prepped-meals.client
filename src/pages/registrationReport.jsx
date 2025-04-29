@@ -11,6 +11,8 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import SidebarAdmin from '../components/sidebarAdmin';
+import HeaderAdmin from '../components/headerAdmin';
 
 // Register the necessary components for the line chart
 ChartJS.register(LineController, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
@@ -75,7 +77,7 @@ const RegistrationReport = () => {
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = `Registration_Report_${startDate}_to_${endDate}.pdf`;
-      link.click();
+      link.click();  
     } catch (error) {
       console.error(error);
       alert("Failed to download PDF.");
@@ -87,11 +89,11 @@ const RegistrationReport = () => {
   const chartData = useMemo(() => ({
     labels: reportData.map(customer => {
       const date = new Date(customer.createdAt);
-      return date.toISOString().split('T')[0]; // Show YYYY-MM-DD
+      return date.toISOString().split('T')[0]; 
     }),
     datasets: [{
       label: "Registrations",
-      data: reportData.map(() => 1), // 1 registration per customer
+      data: reportData.map(() => 1), 
       backgroundColor: "rgba(75, 192, 192, 0.6)",
       borderColor: "rgba(75, 192, 192, 1)",
       borderWidth: 1,
@@ -135,65 +137,74 @@ const RegistrationReport = () => {
   }, [reportData, chartData]);
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Customer Registration Report</h2>
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <SidebarAdmin />
 
-      <div className="mb-4 flex gap-2">
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          className="border p-2"
-        />
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          className="border p-2"
-        />
-        <button onClick={generateReport} className="bg-green-600 text-white px-4 py-2 rounded">
-          View Report
-        </button>
-        <button
-          onClick={downloadPDF}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-          disabled={loadingPdf}
-        >
-          {loadingPdf ? "Downloading..." : "Download PDF"}
-        </button>
-      </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <HeaderAdmin />
 
-      {error && <p className="text-red-500">{error}</p>}
-      {loading && <p>Loading...</p>}
+        <h2 className="text-2xl font-bold mb-4 p-6">Customer Registration Report</h2>
 
-      {reportData.length > 0 && (
-        <>
-          <table className="min-w-full border mt-6">
-            <thead>
-              <tr>
-                <th className="border p-2">Name</th>
-                <th className="border p-2">Email</th>
-                <th className="border p-2">Registration Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.map((customer, idx) => (
-                <tr key={idx}>
-                  <td className="border p-2">{customer.f_name} {customer.l_name}</td>
-                  <td className="border p-2">{customer.email}</td>
-                  <td className="border p-2">{new Date(customer.createdAt).toISOString().split('T')[0]}</td>
+        <div className="mb-4 flex gap-2 p-6">
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="border p-2"
+          />
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="border p-2"
+          />
+          <button onClick={generateReport} className="bg-green-600 text-white px-4 py-2 rounded">
+            View Report
+          </button>
+          <button
+            onClick={downloadPDF}
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+            disabled={loadingPdf}
+          >
+            {loadingPdf ? "Downloading..." : "Download PDF"}
+          </button>
+        </div>
+
+        {error && <p className="text-red-500 p-6">{error}</p>}
+        {loading && <p>Loading...</p>}
+
+        {reportData.length > 0 && (
+          <>
+            <table className="min-w-full border mt-6 p-6">
+              <thead>
+                <tr>
+                  <th className="border p-2">Name</th>
+                  <th className="border p-2">Email</th>
+                  <th className="border p-2">Registration Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {reportData.map((customer, idx) => (
+                  <tr key={idx}>
+                    <td className="border p-2">{customer.f_name} {customer.l_name}</td>
+                    <td className="border p-2">{customer.email}</td>
+                    <td className="border p-2">{new Date(customer.createdAt).toISOString().split('T')[0]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-          <div className="mt-8">
-            <canvas ref={chartRef}></canvas>
-          </div>
-        </>
-      )}
+            <div className="mt-8 p-6">
+              <canvas ref={chartRef}></canvas>
+            </div>
+          </>
+        )}
 
-      {!loading && reportData.length === 0 && <p className="text-gray-600 mt-4">No records found for the selected dates.</p>}
+        {!loading && reportData.length === 0 && <p className="text-gray-600 mt-4 p-6">No records found for the selected dates.</p>}
+      </div>
     </div>
   );
 };
