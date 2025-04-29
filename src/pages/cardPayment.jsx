@@ -42,7 +42,7 @@ const CardPayment = () => {
         {
           customer: user?._id,
           cardholder_name: cardHolderName,
-          card_number: cardNumber,
+          card_number: cardNumber.replace(/\s+/g, ""),
           cvv,
           exp_date: expiryDate,
         },
@@ -114,7 +114,7 @@ const CardPayment = () => {
     const updatedCardData = {
       customer: savedCard?.cardDetails?.customer,
       cardholder_name: cardHolderName?.trim(),
-      card_number: cardNumber?.trim(),
+      card_number: cardNumber.replace(/\s+/g, ""),
       cvv: cvv?.trim(),
       exp_date: expiryDate?.trim(),
     };
@@ -169,7 +169,7 @@ const CardPayment = () => {
             paymentDetails?.payment_type === "CardPayment"
               ? {
                   cardholder_name: cardHolderName,
-                  card_number: cardNumber,
+                  card_number: cardNumber.replace(/\s+/g, ""),
                   cvv,
                   exp_date: expiryDate,
                 }
