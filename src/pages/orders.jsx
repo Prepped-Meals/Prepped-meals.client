@@ -2,7 +2,7 @@ import React from "react";
 import { useAuth } from "../context/authContext";
 import { useGetOrdersByCustomer } from "../hooks/useGetOrders.js";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import logo from '../assets/images/logo.png';
 
 
@@ -72,7 +72,7 @@ const Orders = () => {
       `Rs. ${details.totalPrice.toFixed(2)}`,
     ]);
   
-    doc.autoTable({
+    autoTable(doc,{
       startY: 50,
       head: [["Meal Name", "Quantity", "Unit Price", "Total Price"]],
       body: mealData,
@@ -182,7 +182,7 @@ const Orders = () => {
         `Rs. ${item.total_price.toFixed(2)}`,
       ]);
   
-      doc.autoTable({
+      autoTable(doc,{
         startY: startY,
         head: [["Meal", "Quantity", "Unit Price", "Total"]],
         body: cartItems,
