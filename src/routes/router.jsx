@@ -24,6 +24,7 @@ import AdminFeedbackPage from "../pages/adminFeedbacks";
 import AdminMealReports from "../pages/adminMealReports";
 import AdminOrders from "../pages/adminorders";
 import AdminPaymentPage from "../pages/adminPayment";
+import AdminorderTracking from "../pages/adminOrderTracking";
 
 
 
@@ -133,6 +134,10 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.ADMIN_PAYMENTS,
         element: <AdminPaymentPage />,
+      },
+      {
+        path: ROUTES.ORDER_TRACKING,
+        element: <AdminorderTracking/>,
       },
     ],
   },
