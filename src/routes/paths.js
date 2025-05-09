@@ -22,4 +22,5 @@ export const ROUTES = {
     CUSTOMER_LIST: "/CustomersList",
     ADMIN_ORDERS: "/adminorders",
     ADMIN_PAYMENTS: "/adminPayments",
+    ORDER_TRACKING: "/adminOrderTracking",
 };

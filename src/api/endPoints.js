@@ -20,4 +20,5 @@ export const END_POINTS = {
   GET_TOP_CUSTOMERS_REPORT: "api/orders/top-customers-report",
   GET_ORDER_STATUS_REPORT: "api/orders/generate-order-status-report",
   GET_PAYMENT_REPORT: "api/payments/weekly-report",
+  UPDATE_ORDER_STATUS: (orderId) => `api/orders/update-status/${orderId}`,
 };
