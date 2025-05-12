@@ -4,15 +4,21 @@ import axios from "axios";
 
 import Button from "../components/button";
 import { ROUTES } from "../routes/paths";
-import bgImage from "../assets/images/green-wall-texture.jpg"; // Background image
+import bgImage from "../assets/images/green-wall-texture.jpg";
+import { useAuth } from "../context/authContext";
+import { useSaveCart } from "../hooks/useSaveCartDetails";
 
 const Menu = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [meals, setMeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cartQuantities, setCartQuantities] = useState({});
-  const [alertMessage, setAlertMessage] = useState(""); // To show alert for stock issues
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const { mutate: saveCart, isLoading: savingCart } = useSaveCart();
 
   useEffect(() => {
     const fetchMeals = async () => {
@@ -49,8 +55,8 @@ const Menu = () => {
     setCartQuantities(quantities);
   }, []);
 
-  const handleAddToCart = (meal) => {
-    if (meal.meal_stock <= 0) {
+  const handleAddToCart = (meal, action) => {
+    if (action === "increase" && meal.meal_stock <= 0) {
       setAlertMessage(`Sorry, ${meal.meal_name} is out of stock.`);
       return;
     }
@@ -61,16 +67,29 @@ const Menu = () => {
     );
 
     if (existingIndex !== -1) {
-      if (existingCart[existingIndex].quantity < meal.meal_stock) {
-        existingCart[existingIndex].quantity += 1;
+      if (action === "increase") {
+        if (existingCart[existingIndex].quantity < meal.meal_stock) {
+          existingCart[existingIndex].quantity += 1;
+        } else {
+          setAlertMessage(
+            `Cannot add more of ${meal.meal_name}. Not enough stock.`
+          );
+          return;
+        }
+      } else if (action === "decrease") {
+        if (existingCart[existingIndex].quantity > 1) {
+          existingCart[existingIndex].quantity -= 1;
+        } else {
+          existingCart.splice(existingIndex, 1);
+        }
+      }
+
+      if (existingCart[existingIndex]) {
         existingCart[existingIndex].total_price =
           existingCart[existingIndex].meal_price *
           existingCart[existingIndex].quantity;
-      } else {
-        setAlertMessage(`Cannot add more of ${meal.meal_name}. Not enough stock.`);
-        return;
       }
-    } else {
+    } else if (action === "increase") {
       existingCart.push({
         meal: meal._id,
         meal_name: meal.meal_name,
@@ -78,48 +97,31 @@ const Menu = () => {
         quantity: 1,
         total_price: meal.meal_price,
       });
+    } else {
+      // Cannot decrease a non-existing item
+      return;
     }
 
     localStorage.setItem("cart", JSON.stringify(existingCart));
 
-    // Update local quantity
-    setCartQuantities((prev) => ({
-      ...prev,
-      [meal._id]: (prev[meal._id] || 0) + 1,
-    }));
-  };
-
-  const handleIncrease = (meal) => {
-    handleAddToCart(meal);
-  };
-
-  const handleDecrease = (meal) => {
-    const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
-    const existingIndex = existingCart.findIndex(
-      (item) => item.meal === meal._id
-    );
-
-    if (existingIndex !== -1) {
-      if (existingCart[existingIndex].quantity > 1) {
-        existingCart[existingIndex].quantity -= 1;
-        existingCart[existingIndex].total_price =
-          existingCart[existingIndex].meal_price *
-          existingCart[existingIndex].quantity;
-      } else {
-        existingCart.splice(existingIndex, 1);
-      }
-      localStorage.setItem("cart", JSON.stringify(existingCart));
-    }
-
-    // Update local quantity
     setCartQuantities((prev) => {
-      const updated = { ...prev };
-      if (updated[meal._id] > 1) {
-        updated[meal._id] -= 1;
+      const newQuantity =
+        (prev[meal._id] || 0) + (action === "increase" ? 1 : -1);
+      if (newQuantity > 0) {
+        return { ...prev, [meal._id]: newQuantity };
       } else {
+        const updated = { ...prev };
         delete updated[meal._id];
+        return updated;
       }
-      return updated;
+    });
+
+    saveCart({
+      customer: user._id,
+      meal: meal._id,
+      meal_name: meal.meal_name,
+      meal_price: meal.meal_price,
+      action,
     });
   };
 
@@ -175,7 +177,9 @@ const Menu = () => {
                   className="w-full h-48 object-cover rounded-md mb-4"
                 />
 
-                <h2 className="text-2xl font-semibold mb-2">{meal.meal_name}</h2>
+                <h2 className="text-2xl font-semibold mb-2">
+                  {meal.meal_name}
+                </h2>
                 <p className="text-gray-700 mb-2">{meal.meal_description}</p>
                 <p className="text-sm text-gray-500 mb-1">
                   Calories: {meal.calorie_count}
@@ -185,7 +189,7 @@ const Menu = () => {
                 {isAdded ? (
                   <div className="flex items-center justify-center gap-4 mt-4">
                     <button
-                      onClick={() => handleDecrease(meal)}
+                      onClick={() => handleAddToCart(meal, "decrease")}
                       className="bg-red-400 hover:bg-red-500 text-white px-3 py-1 rounded-full text-xl"
                     >
                       -
@@ -194,7 +198,7 @@ const Menu = () => {
                       {cartQuantities[meal._id]}
                     </span>
                     <button
-                      onClick={() => handleIncrease(meal)}
+                      onClick={() => handleAddToCart(meal, "increase")}
                       className="bg-green-400 hover:bg-green-500 text-white px-3 py-1 rounded-full text-xl"
                     >
                       +
@@ -202,7 +206,7 @@ const Menu = () => {
                   </div>
                 ) : (
                   <Button
-                    onClick={() => handleAddToCart(meal)}
+                    onClick={() => handleAddToCart(meal, "increase")}
                     className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-md transition duration-300"
                   >
                     Add to Cart
