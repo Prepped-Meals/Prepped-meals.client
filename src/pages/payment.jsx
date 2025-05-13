@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../routes/paths";
 import { CartContext } from "../context/cartContext";
@@ -16,9 +16,53 @@ const Payment = () => {
   const [address, setAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("CashOnDelivery");
+  const [isGift, setIsGift] = useState(false);
+  const [sendToMyself, setSendToMyself] = useState(false);
+  const [profileData, setProfileData] = useState({
+    firstName: "",
+    lastName: "",
+    phoneNumber: "",
+    email: "",
+  });
   const { subtotal, deliveryFee, total, cartItems } = useContext(CartContext);
 
-  console.log("Cart Items:", cartItems);
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    if (sendToMyself) {
+      setPhoneNumber(profileData.phoneNumber || "");
+      setAddress(profileData.firstName || "");
+    } else {
+      setPhoneNumber("");
+      setAddress("");
+    }
+  }, [sendToMyself, profileData]);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/api/customers/me", {
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Unauthorized");
+
+      const data = await res.json();
+      const profilePicPath = data.profile_pic
+        ? `http://localhost:8000${data.profile_pic}`
+        : "http://localhost:8000/uploads/user.png";
+
+      setProfileData({
+        firstName: data.f_name || "",
+        lastName: data.l_name || "",
+        phoneNumber: data.contact_no || "",
+        email: data.email || "",
+      });
+    } catch (err) {
+      console.error("Failed to fetch profile:", err.message);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -106,6 +150,27 @@ const Payment = () => {
         <h1 className="text-4xl font-extrabold text-green-800 mb-6 text-center">
           Checkout & Payment
         </h1>
+
+        <div className="flex flex-raw gap-2 pb-5">
+          <label className="flex items-center gap-3 text-green-900">
+            <input
+              type="checkbox"
+              checked={isGift}
+              onChange={() => setIsGift(!isGift)}
+              disabled={sendToMyself}
+            />
+            Send as a Gift
+          </label>
+          <label className="flex items-center gap-3 text-green-900">
+            <input
+              type="checkbox"
+              checked={sendToMyself}
+              onChange={() => setSendToMyself(!sendToMyself)}
+              disabled={isGift}
+            />
+            Send to Myself
+          </label>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
