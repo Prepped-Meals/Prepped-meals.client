@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Button from "../components/button";
-import SidebarAdmin from "../components/sidebarAdmin"; // Sidebar component
-import Header from "../components/headerAdmin"; 
+import SidebarAdmin from "../components/sidebarAdmin";
+import Header from "../components/headerAdmin";
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -11,12 +11,15 @@ const AdminMealReports = () => {
     const [slowMovingMeals, setSlowMovingMeals] = useState([]);
     const [showLowStock, setShowLowStock] = useState(false);
     const [showFastSlow, setShowFastSlow] = useState(false);
+    const [lowStockLastUpdated, setLowStockLastUpdated] = useState(null);
+    const [movingMealsLastUpdated, setMovingMealsLastUpdated] = useState(null);
 
     const fetchLowStockMeals = async () => {
         try {
             const response = await axios.get('/api/mealReports/low-stock');
             setLowStockMeals(response.data);
             setShowLowStock(true);
+            setLowStockLastUpdated(new Date());
         } catch (error) {
             console.error('Error fetching low stock meals:', error);
         }
@@ -28,6 +31,7 @@ const AdminMealReports = () => {
             setFastMovingMeals(response.data.fastMovingMeals);
             setSlowMovingMeals(response.data.slowMovingMeals);
             setShowFastSlow(true);
+            setMovingMealsLastUpdated(new Date());
         } catch (error) {
             console.error('Error fetching moving meals:', error);
         }
@@ -77,12 +81,14 @@ const AdminMealReports = () => {
         return Object.values(mealsMap);
     };
 
+    const lowestStockValue = Math.min(...lowStockMeals.map(m => m.meal_stock));
+
     return (
         <div className="flex min-h-screen bg-gray-100">
-            <SidebarAdmin /> {/* Sidebar */}
+            <SidebarAdmin />
 
             <div className="flex flex-col flex-1">
-                <Header /> {/* Header added here */}
+                <Header />
 
                 <div className="p-8 flex-1">
                     <h1 className="text-3xl font-bold mb-8 text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
@@ -93,10 +99,16 @@ const AdminMealReports = () => {
                         {/* Low Stock Report */}
                         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition duration-300">
                             <h2 className="text-xl font-semibold text-gray-700 mb-4">Low Stock Report</h2>
-                            <div className="flex gap-4 mb-6">
+                            <div className="flex gap-4 mb-2">
                                 <Button onClick={fetchLowStockMeals} className="bg-green-700 hover:bg-green-800 text-white text-sm px-5 py-2 rounded-full shadow-sm transition">View Report</Button>
                                 <Button onClick={handleDownloadLowStockReport} className="bg-blue-700 hover:bg-blue-800 text-white text-sm px-5 py-2 rounded-full shadow-sm transition">Download PDF</Button>
                             </div>
+
+                            {lowStockLastUpdated && (
+                                <p className="text-sm text-gray-500 mb-4">
+                                    Last updated: {lowStockLastUpdated.toLocaleString()}
+                                </p>
+                            )}
 
                             {showLowStock && (
                                 <>
@@ -131,7 +143,39 @@ const AdminMealReports = () => {
                                                     <YAxis />
                                                     <Tooltip />
                                                     <Legend />
-                                                    <Bar dataKey="meal_stock" fill="#8884d8" name="Meal Stock" />
+                                                    <Bar
+                                                        dataKey="meal_stock"
+                                                        name="Meal Stock"
+                                                        fill="#8884d8"
+                                                        isAnimationActive={false}
+                                                        shape={(props) => {
+                                                            const { x, y, width, height, payload } = props;
+                                                            const isLowest = payload.meal_stock === lowestStockValue;
+                                                            return (
+                                                                <g>
+                                                                    <rect
+                                                                        x={x}
+                                                                        y={y}
+                                                                        width={width}
+                                                                        height={height}
+                                                                        fill={isLowest ? '#f87171' : '#8884d8'}
+                                                                    />
+                                                                    {isLowest && (
+                                                                        <text
+                                                                            x={x + width / 2}
+                                                                            y={y - 10}
+                                                                            textAnchor="middle"
+                                                                            fill="#e11d48"
+                                                                            fontSize={12}
+                                                                            fontWeight="bold"
+                                                                        >
+                                                                            Lowest Stock
+                                                                        </text>
+                                                                    )}
+                                                                </g>
+                                                            );
+                                                        }}
+                                                    />
                                                 </BarChart>
                                             </ResponsiveContainer>
                                         </div>
@@ -143,10 +187,16 @@ const AdminMealReports = () => {
                         {/* Fast/Slow Moving Report */}
                         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition duration-300">
                             <h2 className="text-xl font-semibold text-gray-700 mb-4">Fast/Slow Moving Report</h2>
-                            <div className="flex gap-4 mb-6">
+                            <div className="flex gap-4 mb-2">
                                 <Button onClick={fetchMovingMeals} className="bg-green-700 hover:bg-green-800 text-white text-sm px-5 py-2 rounded-full shadow-sm transition">View Report</Button>
                                 <Button onClick={handleDownloadFastSlowMovingReport} className="bg-blue-700 hover:bg-blue-800 text-white text-sm px-5 py-2 rounded-full shadow-sm transition">Download PDF</Button>
                             </div>
+
+                            {movingMealsLastUpdated && (
+                                <p className="text-sm text-gray-500 mb-4">
+                                    Last updated: {movingMealsLastUpdated.toLocaleString()}
+                                </p>
+                            )}
 
                             {showFastSlow && (
                                 <>

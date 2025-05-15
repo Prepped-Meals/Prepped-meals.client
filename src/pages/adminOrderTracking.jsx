@@ -7,12 +7,11 @@ import Header from "../components/headerAdmin";
 const AdminorderTracking = () => {
   const [orders, setOrders] = useState([]);
 
-  // Fetch all orders from the backend when the component mounts
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const response = await axios.get(END_POINTS.GET_ORDER_DETAILS);
-        setOrders(response.data.data); // Assuming your backend response has a `data` property containing the orders
+        setOrders(response.data.data);
       } catch (error) {
         console.error("Error fetching orders:", error);
       }
@@ -21,15 +20,12 @@ const AdminorderTracking = () => {
     fetchOrders();
   }, []);
 
-  // Handle changing the order status
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      // Corrected API call using 'status' instead of 'order_status'
       await axios.put(END_POINTS.UPDATE_ORDER_STATUS(orderId), {
         status: newStatus,
       });
 
-      // Update the local state after the status change
       const updatedOrders = orders.map((order) =>
         order._id === orderId ? { ...order, order_status: newStatus } : order
       );
@@ -42,88 +38,97 @@ const AdminorderTracking = () => {
     }
   };
 
-  // Function to determine the background color based on the order status
-  const getRowColor = (status) => {
-    switch (status) {
-      case "Pending":
-        return "bg-yellow-100"; // Yellow background for Pending orders
-      case "Completed":
-        return "bg-green-100"; // Green background for Completed orders
-      case "Cancelled":
-        return "bg-red-100"; // Red background for Cancelled orders
-      default:
-        return "bg-white"; // Default white background
-    }
-  };
-
   return (
-    <div className="flex">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-gray-50">
       <SidebarAdmin />
-
-      <div className="flex-1">
-        {/* Header */}
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
+        
+        <main className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-8">
+              <h1 className="text-2xl font-semibold text-gray-800">Order Tracking</h1>
+            </div>
 
-        <div className="p-6">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">Order Tracking</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-300 bg-white rounded-lg shadow-md">
-              <thead className="bg-gray-100 text-left">
-                <tr>
-                  <th className="px-4 py-2 text-gray-600">Order ID</th>
-                  <th className="px-4 py-2 text-gray-600">Items & Quantities</th>
-                  <th className="px-4 py-2 text-gray-600">Received Date</th>
-                  <th className="px-4 py-2 text-gray-600">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.length > 0 ? (
-                  orders.map((order) => (
-                    <tr
-                      key={order._id}
-                      className={`border-t ${getRowColor(order.order_status)}`}
-                    >
-                      <td className="px-4 py-2">{order._id}</td>
-                      <td className="px-4 py-2">
-                        {/* Display items and quantities together */}
-                        <ul className="list-disc pl-6">
-                          {order.cart_items.map((item, idx) => (
-                            <li key={idx} className="text-gray-700">
-                              {item.meal_name} - {item.quantity}
-                            </li>
-                          ))}
-                        </ul>
-                      </td>
-                      <td className="px-4 py-2">
-                        {new Date(order.order_received_date).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-2">
-                        <select
-                          value={order.order_status}
-                          onChange={(e) =>
-                            handleStatusChange(order._id, e.target.value)
-                          }
-                          className="border rounded px-4 py-2 bg-gray-50 hover:bg-gray-200 transition-colors duration-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="Pending" className="text-yellow-600">Pending</option>
-                          <option value="Completed" className="text-green-600">Completed</option>
-                          <option value="Cancelled" className="text-red-600">Cancelled</option>
-                        </select>
-                      </td>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Order ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Items
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="px-4 py-2 text-center text-gray-600">
-                      No orders found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {orders.length > 0 ? (
+                      orders.map((order) => (
+                        <tr key={order._id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            #{order._id.slice(-6).toUpperCase()}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            <div className="space-y-1">
+                              {order.cart_items.map((item, idx) => (
+                                <div key={idx} className="flex">
+                                  <span className="text-gray-700">
+                                    {item.meal_name}
+                                  </span>
+                                  <span className="ml-2 text-gray-500">
+                                    (x{item.quantity})
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(order.order_received_date).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <select
+                              value={order.order_status}
+                              onChange={(e) =>
+                                handleStatusChange(order._id, e.target.value)
+                              }
+                              className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="Pending">⏳ Pending</option>
+                              <option value="Completed">✅ Completed</option>
+                              <option value="Cancelled">❌ Cancelled</option>
+                            </select>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="4"
+                          className="px-6 py-4 text-center text-sm text-gray-500"
+                        >
+                          No orders found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

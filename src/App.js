@@ -1,9 +1,24 @@
 import { Outlet, useLocation } from "react-router-dom";
+import { useState, useEffect } from 'react';
 import NavBar from "./components/navbar";
 import Footer from "./components/footer";
+import Loader from "./components/loader";
 
 function App() {
   const location = useLocation();
+   const [loading, setLoading] = useState(false);
+
+  // Show loader on route change
+  useEffect(() => {
+    setLoading(true);
+
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 800); // adjust timing as needed
+
+    return () => clearTimeout(timeout);
+  }, [location.pathname]);
+
 
   // Check if current path starts with /admin
   const shouldHideNav =
@@ -18,9 +33,15 @@ function App() {
 
   return (
     <>
+         {loading ? (
+        <Loader />
+      ) : (
+        <>
       {!shouldHideNav && <NavBar />}
       <Outlet />
       {!shouldHideNav && <Footer />}
+    </>
+      )}
     </>
   );
 }
