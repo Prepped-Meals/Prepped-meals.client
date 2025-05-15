@@ -17,6 +17,7 @@ const Menu = () => {
   const [error, setError] = useState(null);
   const [cartQuantities, setCartQuantities] = useState({});
   const [alertMessage, setAlertMessage] = useState("");
+  const [showLoginPopup, setShowLoginPopup] = useState(false); // State for login popup
 
   const { mutate: saveCart, isLoading: savingCart } = useSaveCart();
 
@@ -56,6 +57,12 @@ const Menu = () => {
   }, []);
 
   const handleAddToCart = (meal, action) => {
+    // Check if user is logged in
+    if (!user) {
+      setShowLoginPopup(true); // Show login popup if not logged in
+      return;
+    }
+
     if (action === "increase" && meal.meal_stock <= 0) {
       setAlertMessage(`Sorry, ${meal.meal_name} is out of stock.`);
       return;
@@ -143,6 +150,31 @@ const Menu = () => {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Login Required Popup */}
+      {showLoginPopup && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-80 text-center">
+            <p className="text-red-500 font-semibold mb-4">
+              You must log in to add items to the cart.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => navigate(ROUTES.SIGN_IN)}
+                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => setShowLoginPopup(false)}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
