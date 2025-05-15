@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import signupImage from "../assets/images/SignUpImage.jpg";
+import signupImage from "../assets/images/foodbg.jpg";
 import Button from "../components/button.js";
 import { useAuth } from "../context/authContext"; 
+import { FiLock, FiUser, FiArrowRight } from "react-icons/fi";
 
 const SignIn = () => {
   const [username, setUsername] = useState("");
@@ -15,8 +16,7 @@ const SignIn = () => {
     e.preventDefault();
 
     try {
-      
-        const response = await fetch("http://localhost:8000/api/auth/login", {
+      const response = await fetch("http://localhost:8000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -28,9 +28,9 @@ const SignIn = () => {
 
       if (data.role === "admin"){
         navigate("/DashboardAdmin"); 
-      }else{
-      login(data.customer); 
-      navigate("/");
+      } else {
+        login(data.customer); 
+        navigate("/");
       }
 
     } catch (err) {
@@ -39,58 +39,79 @@ const SignIn = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Image */}
-      <div
-        className="w-1/2 bg-cover bg-center"
-        style={{ backgroundImage: `url(${signupImage})` }}
-      ></div>
+    <div
+      className="min-h-screen flex items-center justify-end bg-cover bg-center"
+      style={{
+        backgroundImage: `url(${signupImage})`,
+      }}
+    >
+      <div className="bg-white/30 backdrop-blur-lg shadow-lg rounded-l-xl w-full max-w-md p-10 m-0 sm:mr-8 md:mr-16 lg:mr-24">
+        <div className="text-center mb-6">
+          <div className="mx-auto flex items-center justify-center bg-green-100 w-16 h-16 rounded-full mb-4">
+            <FiLock className="text-green-800 text-2xl" />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Sign In</h1>
+          <p className="text-gray-700">Enter your credentials to access your account</p>
+        </div>
 
-      {/* Form */}
-      <div className="w-1/2 flex items-center justify-center p-10 bg-[FFFFF]">
-        <div className="w-full max-w-md">
-          <h2 className="text-2xl font-semibold text-center mb-6">Login to your account</h2>
+        {error && (
+          <div className="mb-6 p-3 bg-red-50 text-red-700 rounded-lg text-center text-sm">
+            {error}
+          </div>
+        )}
 
-          {error && <p className="text-red-500 text-center">{error}</p>}
-
-          <form onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-sm font-medium">Username</label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiUser className="text-gray-400" />
+              </div>
               <input
                 type="text"
-                className="w-full border p-2 rounded"
+                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-transparent bg-white/70"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium">Password</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FiLock className="text-gray-400" />
+              </div>
               <input
                 type="password"
-                className="w-full border p-2 rounded"
+                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-transparent bg-white/70"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
               />
             </div>
+          </div>
 
+          <div className="pt-2">
             <Button
               type="submit"
-              variant="primary"
-              size="md"
-              className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700 mt-4"
+              className="w-full flex items-center justify-center bg-green-800 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium transition-all shadow-md hover:shadow-lg"
             >
-              Login
+              Sign In <FiArrowRight className="ml-2" />
             </Button>
-          </form>
+          </div>
 
-          <p className="text-center text-sm mt-4">
+          <div className="text-center text-sm text-gray-800 mt-6">
             Don't have an account?{" "}
-            <a href="/sign-up" className="text-green-600 font-semibold">
-              Sign up
+            <a
+              href="/sign-up"
+              className="text-green-800 font-medium hover:text-green-700 hover:underline transition-colors"
+            >
+              Create account
             </a>
-          </p>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );

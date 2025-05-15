@@ -26,12 +26,41 @@ const RegistrationReport = () => {
   const [reportData, setReportData] = useState([]);
   const chartRef = useRef(null);
 
+
+  //validateDates function to check the date inputs
+  const validateDates = () => {
+    if (!startDate || !endDate) {
+      setError("Please select both start and end dates.");
+      return false;
+    }
+
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (start > end) {
+      setError("Start date cannot be after end date.");
+      return false;
+    }
+
+    if (start > now || end > now) {
+      setError("Dates cannot be in the future.");
+      return false;
+    }
+
+    if (start.toDateString() === end.toDateString()) {
+      setError("Start and end dates cannot be the same.");
+      return false;
+    }
+
+    return true;
+  };
+
   const generateReport = async () => {
     setLoading(true);
     setError(null);
 
-    if (!startDate || !endDate) {
-      setError("Please select both start and end dates.");
+    if (!validateDates()) {
       setLoading(false);
       return;
     }
@@ -61,10 +90,7 @@ const RegistrationReport = () => {
   };
 
   const downloadPDF = async () => {
-    if (!startDate || !endDate) {
-      setError("Please select both start and end dates.");
-      return;
-    }
+    if (!validateDates()) return;
 
     setLoadingPdf(true);
     try {
@@ -77,7 +103,7 @@ const RegistrationReport = () => {
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
       link.download = `Registration_Report_${startDate}_to_${endDate}.pdf`;
-      link.click();  
+      link.click();
     } catch (error) {
       console.error(error);
       alert("Failed to download PDF.");
@@ -89,11 +115,11 @@ const RegistrationReport = () => {
   const chartData = useMemo(() => ({
     labels: reportData.map(customer => {
       const date = new Date(customer.createdAt);
-      return date.toISOString().split('T')[0]; 
+      return date.toISOString().split('T')[0];
     }),
     datasets: [{
       label: "Registrations",
-      data: reportData.map(() => 1), 
+      data: reportData.map(() => 1),
       backgroundColor: "rgba(75, 192, 192, 0.6)",
       borderColor: "rgba(75, 192, 192, 1)",
       borderWidth: 1,
@@ -109,7 +135,7 @@ const RegistrationReport = () => {
       }
 
       new ChartJS(ctx, {
-        type: "line", // Line chart type
+        type: "line",
         data: chartData,
         options: {
           responsive: true,
@@ -128,7 +154,7 @@ const RegistrationReport = () => {
                 display: true,
                 text: "Registrations Count",
               },
-              beginAtZero: true, // Ensure y-axis starts at 0
+              beginAtZero: true,
             },
           },
         },
@@ -138,12 +164,9 @@ const RegistrationReport = () => {
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
       <SidebarAdmin />
 
-      {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <HeaderAdmin />
 
         <h2 className="text-2xl font-bold mb-4 p-6">Customer Registration Report</h2>
