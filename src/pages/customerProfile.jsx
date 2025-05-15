@@ -20,8 +20,58 @@ const CustomerProfile = () => {
 
   const [errors, setErrors] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const { logout } = useAuth(); 
   const navigate = useNavigate(); 
+
+  // Validation functions (same as SignUp)
+  const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
+  const validatePhone = (phone) => /^\d{10}$/.test(phone);
+
+  const validateField = (name, value) => {
+    let error = '';
+
+    if (name === 'firstName' || name === 'lastName') {
+      if (!value.trim()) {
+        error = `${name === 'firstName' ? 'First' : 'Last'} name is required`;
+      } else if (!/^[A-Za-z]+$/.test(value)) {
+        error = `${name === 'firstName' ? 'First' : 'Last'} name must contain only letters`;
+      }
+    }
+
+    if (name === 'email') {
+      if (!value.trim()) error = 'Email is required';
+      else if (!validateEmail(value)) error = 'Invalid email address';
+    }
+
+    if (name === 'phoneNumber') {
+      if (!value.trim()) error = 'Phone number is required';
+      else if (!validatePhone(value)) error = 'Phone number must be 10 digits';
+    }
+
+    if (name === 'username') {
+      if (!value.trim()) error = 'Username is required';
+      else if (value.length < 4) error = 'Username must be at least 4 characters';
+    }
+
+    return error;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData((prev) => ({ ...prev, [name]: value }));
+
+    const error = validateField(name, value);
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const error = validateField(name, value);
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  };
 
   const fetchProfile = async () => {
     try {
@@ -53,76 +103,22 @@ const CustomerProfile = () => {
     fetchProfile();
   }, []);
 
-  // Validation function 
-  const validateFields = (fieldName) => {
-    const newErrors = { ...errors };
-
-    if (fieldName === "firstName") {
-      if (!profileData.firstName.trim()) newErrors.firstName = "This field is required";
-      else if (!/^[A-Za-z]+$/.test(profileData.firstName)) {
-        newErrors.firstName = "First name cannot contain numbers";
-      } else {
-        delete newErrors.firstName;
-      }
-    }
-
-    if (fieldName === "lastName") {
-      if (!profileData.lastName.trim()) newErrors.lastName = "This field is required";
-      else if (!/^[A-Za-z]+$/.test(profileData.lastName)) {
-        newErrors.lastName = "Last name cannot contain numbers";
-      } else {
-        delete newErrors.lastName;
-      }
-    }
-
-    if (fieldName === "phoneNumber") {
-      if (!profileData.phoneNumber.trim()) newErrors.phoneNumber = "This field is required";
-      else if (!/^\d{10}$/.test(profileData.phoneNumber)) {
-        newErrors.phoneNumber = "Phone number must be 10 digits";
-      } else {
-        delete newErrors.phoneNumber;
-      }
-    }
-
-    if (fieldName === "email") {
-      if (!profileData.email.trim()) newErrors.email = "This field is required";
-      else if (!/^\S+@\S+\.\S+$/.test(profileData.email)) {
-        newErrors.email = "Invalid email address";
-      } else {
-        delete newErrors.email;
-      }
-    }
-
-    if (fieldName === "username") {
-      if (!profileData.username.trim()) newErrors.username = "This field is required";
-      else {
-        delete newErrors.username;
-      }
-    }
-
-    setErrors(newErrors);
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setProfileData({ ...profileData, [name]: value });
-
-    // Validate field in real time
-    validateFields(name);
-  };
-
-  const handleBlur = (e) => {
-    validateFields(e.target.name);
-  };
-
   const handleEdit = () => {
     setIsEditing(true);
     setErrors({});
   };
 
   const handleSave = async () => {
-    // If any errors exist, do not proceed
-    if (Object.keys(errors).length > 0) return;
+    // Final validation before submission
+    const validationErrors = {};
+    Object.entries(profileData).forEach(([name, value]) => {
+      if (name !== 'profilePic') { // Skip profilePic validation
+        const error = validateField(name, value);
+        if (error) validationErrors[name] = error;
+      }
+    });
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
 
     try {
       await fetch("http://localhost:8000/api/customers/me", {
@@ -149,7 +145,7 @@ const CustomerProfile = () => {
         });
       }
 
-      alert("Profile updated successfully!");
+      setShowSuccess(true);
       setIsEditing(false);
       fetchProfile();
     } catch (err) {
@@ -169,9 +165,10 @@ const CustomerProfile = () => {
   };
 
   const handleDeleteAccount = async () => {
-    const confirmDelete = window.confirm("Are you sure you want to delete your account? This action is irreversible.");
-    if (!confirmDelete) return;
+    setShowDeleteConfirm(true);
+  };
 
+  const confirmDeleteAccount = async () => {
     try {
       const res = await fetch("http://localhost:8000/api/customers/me", {
         method: "DELETE",
@@ -179,8 +176,8 @@ const CustomerProfile = () => {
       });
       if (!res.ok) throw new Error("Could not delete");
 
-      alert("Account deleted successfully.");
-      logout();
+      setShowDeleteConfirm(false);
+      setShowDeleteSuccess(true);
     } catch (err) {
       console.error(err.message);
       alert("Could not delete account.");
@@ -204,6 +201,21 @@ const CustomerProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 py-8 px-4 sm:px-6 lg:px-8">
+      {/* Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-4 shadow-xl w-72 text-center">
+            <h2 className="text-lg font-semibold text-green-700 mb-4">Profile updated successfully!</h2>
+            <button
+              onClick={() => setShowSuccess(false)}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
           {/* Profile Header */}
@@ -425,6 +437,48 @@ const CustomerProfile = () => {
                 Cancel
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-72 text-center">
+            <h2 className="text-lg font-semibold mb-4 text-red-600">Are you sure you want to delete your account?</h2>
+            <p className="text-sm text-gray-600 mb-4">This action cannot be undone. All your data will be permanently removed.</p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={confirmDeleteAccount}
+                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="bg-gray-300 px-4 py-2 rounded-md hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Success Modal */}
+      {showDeleteSuccess && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-4 w-72 text-center">
+            <h2 className="text-lg font-semibold mb-4 text-green-700">Account deleted successfully!</h2>
+            <button
+              onClick={() => {
+                setShowDeleteSuccess(false);
+                logout();
+              }}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
