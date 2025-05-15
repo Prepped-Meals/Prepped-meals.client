@@ -11,6 +11,7 @@ const NavBar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const { user, logout } = useAuth();
   const dropdownRef = useRef(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const toggleDropdown = () => setShowDropdown((prev) => !prev);
 
@@ -23,6 +24,15 @@ const NavBar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    logout();
+    setShowLogoutConfirm(false);
+  };
 
   return (
     <nav className="bg-green-800 text-white shadow-xl sticky top-0 z-50">
@@ -67,7 +77,7 @@ const NavBar = () => {
                     <Link to={ROUTES.RESET_PASSWORD} className="block px-5 py-3 hover:bg-lime-100 transition">
                       Security
                     </Link>
-                    <button onClick={logout} className="w-full text-left px-5 py-3 hover:bg-lime-100 transition">
+                    <button onClick={handleLogout} className="w-full text-left px-5 py-3 hover:bg-lime-100 transition">
                       Logout
                     </button>
                   </div>
@@ -76,13 +86,12 @@ const NavBar = () => {
             )}
           </div>
 
-          
           <button className="md:hidden text-white" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <FiX size={26} /> : <FiMenu size={26} />}
           </button>
         </div>
 
-        {/*  Nav */}
+        {/* Nav */}
         {isOpen && (
           <div className="md:hidden flex flex-col gap-4 pb-5 text-lg font-medium">
             <Link to={ROUTES.HOME} className="hover:text-lime-200 transition">Home</Link>
@@ -94,7 +103,7 @@ const NavBar = () => {
                 <Link to={ROUTES.MYORDERS} className="hover:text-lime-200 transition">Order</Link>
                 <Link to={ROUTES.CUSTOMER_PROFILE} className="hover:text-lime-200 transition">Profile</Link>
                 <Link to={ROUTES.RESET_PASSWORD} className="hover:text-lime-200 transition">Security</Link>
-                <button onClick={logout} className="text-left hover:text-lime-200 transition">Logout</button>
+                <button onClick={handleLogout} className="text-left hover:text-lime-200 transition">Logout</button>
               </>
             ) : (
               <>
@@ -105,6 +114,29 @@ const NavBar = () => {
           </div>
         )}
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-72 text-center">
+            <h2 className="text-lg font-semibold mb-4 text-red-600">Are you sure you want to logout?</h2>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={confirmLogout}
+                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="bg-gray-300 px-4 py-2 rounded-md hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

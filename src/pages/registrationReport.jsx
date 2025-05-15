@@ -26,8 +26,6 @@ const RegistrationReport = () => {
   const [reportData, setReportData] = useState([]);
   const chartRef = useRef(null);
 
-
-  //validateDates function to check the date inputs
   const validateDates = () => {
     if (!startDate || !endDate) {
       setError("Please select both start and end dates.");
@@ -112,121 +110,248 @@ const RegistrationReport = () => {
     }
   };
 
-  const chartData = useMemo(() => ({
-    labels: reportData.map(customer => {
-      const date = new Date(customer.createdAt);
-      return date.toISOString().split('T')[0];
-    }),
+ const chartData = useMemo(() => {
+  // Group registrations by date and count them
+  const registrationsByDate = reportData.reduce((acc, customer) => {
+    const date = new Date(customer.createdAt).toISOString().split('T')[0];
+    acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Convert to array of dates and sort chronologically
+  const sortedDates = Object.keys(registrationsByDate).sort((a, b) => new Date(a) - new Date(b));
+  
+  // Calculate cumulative registrations
+  let cumulativeCount = 0;
+  const cumulativeData = sortedDates.map(date => {
+    cumulativeCount += registrationsByDate[date];
+    return cumulativeCount;
+  });
+
+  return {
+    labels: sortedDates,
     datasets: [{
-      label: "Registrations",
-      data: reportData.map(() => 1),
-      backgroundColor: "rgba(75, 192, 192, 0.6)",
+      label: "Cumulative Registrations",
+      data: cumulativeData,
+      backgroundColor: "rgba(75, 192, 192, 0.2)",
       borderColor: "rgba(75, 192, 192, 1)",
-      borderWidth: 1,
+      borderWidth: 2,
+      tension: 0.3, // Makes the line slightly curved
+      fill: true,
+      pointBackgroundColor: "rgba(75, 192, 192, 1)",
+      pointRadius: 4,
+      pointHoverRadius: 6
     }],
-  }), [reportData]);
+  };
+}, [reportData]);
 
-  useEffect(() => {
-    if (chartRef.current && reportData.length > 0) {
-      const ctx = chartRef.current.getContext("2d");
+useEffect(() => {
+  if (chartRef.current && reportData.length > 0) {
+    const ctx = chartRef.current.getContext("2d");
 
-      if (ChartJS.getChart(ctx)) {
-        ChartJS.getChart(ctx).destroy();
-      }
+    if (ChartJS.getChart(ctx)) {
+      ChartJS.getChart(ctx).destroy();
+    }
 
-      new ChartJS(ctx, {
-        type: "line",
-        data: chartData,
-        options: {
-          responsive: true,
-          plugins: {
-            title: { display: true, text: "Customer Registrations Over Time" },
+    new ChartJS(ctx, {
+      type: "line",
+      data: chartData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: { 
+            display: true, 
+            text: "Customer Registrations Over Time",
+            font: {
+              size: 16
+            }
           },
-          scales: {
-            x: {
-              title: {
-                display: true,
-                text: "Date",
-              },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          },
+          legend: {
+            position: 'top',
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: "Date",
+              font: {
+                weight: 'bold'
+              }
             },
-            y: {
-              title: {
-                display: true,
-                text: "Registrations Count",
-              },
-              beginAtZero: true,
+            grid: {
+              display: false
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Total Registrations",
+              font: {
+                weight: 'bold'
+              }
             },
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
           },
         },
-      });
-    }
-  }, [reportData, chartData]);
+        interaction: {
+          intersect: false,
+          mode: 'nearest'
+        }
+      },
+    });
+  }
+}, [reportData, chartData]);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50">
       <SidebarAdmin />
 
       <div className="flex-1 flex flex-col">
         <HeaderAdmin />
 
-        <h2 className="text-2xl font-bold mb-4 p-6">Customer Registration Report</h2>
+        <main className="flex-1 p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-6">Customer Registration Report</h2>
 
-        <div className="mb-4 flex gap-2 p-6">
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="border p-2"
-          />
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="border p-2"
-          />
-          <button onClick={generateReport} className="bg-green-600 text-white px-4 py-2 rounded">
-            View Report
-          </button>
-          <button
-            onClick={downloadPDF}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-            disabled={loadingPdf}
-          >
-            {loadingPdf ? "Downloading..." : "Download PDF"}
-          </button>
-        </div>
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
 
-        {error && <p className="text-red-500 p-6">{error}</p>}
-        {loading && <p>Loading...</p>}
+              <div className="flex flex-wrap gap-3 mb-6">
+                <button 
+                  onClick={generateReport} 
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Generating...
+                    </span>
+                  ) : "View Report"}
+                </button>
+                <button
+                  onClick={downloadPDF}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                  disabled={loadingPdf}
+                >
+                  {loadingPdf ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Downloading...
+                    </span>
+                  ) : "Download PDF"}
+                </button>
+              </div>
 
-        {reportData.length > 0 && (
-          <>
-            <table className="min-w-full border mt-6 p-6">
-              <thead>
-                <tr>
-                  <th className="border p-2">Name</th>
-                  <th className="border p-2">Email</th>
-                  <th className="border p-2">Registration Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reportData.map((customer, idx) => (
-                  <tr key={idx}>
-                    <td className="border p-2">{customer.f_name} {customer.l_name}</td>
-                    <td className="border p-2">{customer.email}</td>
-                    <td className="border p-2">{new Date(customer.createdAt).toISOString().split('T')[0]}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div className="mt-8 p-6">
-              <canvas ref={chartRef}></canvas>
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-red-700">{error}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </>
-        )}
 
-        {!loading && reportData.length === 0 && <p className="text-gray-600 mt-4 p-6">No records found for the selected dates.</p>}
+            {reportData.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+                <div className="p-6">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Email
+                          </th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Registration Date
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {reportData.map((customer, idx) => (
+                          <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {customer.f_name} {customer.l_name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {customer.email}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(customer.createdAt).toISOString().split('T')[0]}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {reportData.length > 0 && (
+              <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Registration Trends</h3>
+                <div className="h-80">
+                  <canvas ref={chartRef}></canvas>
+                </div>
+              </div>
+            )}
+
+            {!loading && reportData.length === 0 && (
+              <div className="bg-white rounded-lg shadow-md p-6 text-center">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 className="mt-2 text-lg font-medium text-gray-900">No records found</h3>
+                <p className="mt-1 text-sm text-gray-500">Try selecting different date range to generate the report.</p>
+              </div>
+            )}
+          </div>
+        </main>
       </div>
     </div>
   );
