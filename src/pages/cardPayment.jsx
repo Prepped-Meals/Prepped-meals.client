@@ -8,6 +8,10 @@ import { useEditCardDetails } from "../hooks/useEditCardDetails";
 import { useDeleteCardDetails } from "../hooks/useDeleteCardDetails";
 import { FaCreditCard, FaUser, FaCalendarAlt, FaLock } from "react-icons/fa";
 import { useSaveOrderDetails } from "../hooks/useSaveOrder.js";
+import CardSec from "../assets/images/CardPayment.png";
+import Visa from "../assets/images/visa-logo.png";
+import MasterCard from "../assets/images/master-card.png";
+import Amex from "../assets/images/american-express.png";
 
 const CardPayment = () => {
   const { user } = useAuth();
@@ -53,7 +57,7 @@ const CardPayment = () => {
             setIsCardSaved(true);
           },
           onError: (error) => {
-            alert("Error saving card details: " + error.message);
+            alert("Invalid Card Number . PLease Check Again");
           },
         }
       );
@@ -68,14 +72,15 @@ const CardPayment = () => {
     if (!cardHolderName.trim()) {
       setCardHolderNameError("Cardholder name is required.");
       isValid = false;
+    } else if (!/^[A-Za-z\s]+$/.test(cardHolderName.trim())) {
+      setCardHolderNameError("Cardholder name must contain only letters.");
+      isValid = false;
     } else {
       setCardHolderNameError("");
     }
 
     if (!/^\d{4} \d{4} \d{4} \d{4}$/.test(cardNumber)) {
-      setCardNumberError(
-        "Card number must be 16 digits (xxxx xxxx xxxx xxxx)."
-      );
+      setCardNumberError("Invalid card number format.");
       isValid = false;
     } else {
       setCardNumberError("");
@@ -85,9 +90,15 @@ const CardPayment = () => {
       setExpiryDateError("Expiry date must be in MM/YY format.");
       isValid = false;
     } else {
-      const [month] = expiryDate.split("/").map(Number);
+      const [month, year] = expiryDate.split("/").map(Number);
+      const expiry = new Date(2000 + year, month - 1); // assuming year is 2-digit like 25 = 2025
+      const now = new Date();
+
       if (month < 1 || month > 12) {
         setExpiryDateError("Invalid expiry month.");
+        isValid = false;
+      } else if (expiry < new Date(now.getFullYear(), now.getMonth())) {
+        setExpiryDateError("Expiry date must be a future date.");
         isValid = false;
       } else {
         setExpiryDateError("");
@@ -217,14 +228,22 @@ const CardPayment = () => {
   const isInputDisabled = isCardSaved && !isEditing;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-green-100 via-white to-green-100 p-4">
-      <div className="w-full max-w-xl p-8 bg-white shadow-xl rounded-2xl">
-        <h2 className="text-3xl font-bold text-green-800 mb-8 text-center">
-          Secure Card Payment
-        </h2>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-100 via-green-50 to-green-200 p-6">
+      <div className="w-full max-w-xl mb-6 text-center">
+        <div className="flex justify-center space-x-4 mb-4">
+          <img src={Visa} alt="Visa" className="h-6" />
+          <img src={MasterCard} alt="MasterCard" className="h-6" />
+          <img src={Amex} alt="American Express" className="h-6" />
+        </div>
+        <div className="flex items-center justify-center space-x-3">
+          <img src={CardSec} alt="Secure Payment" className="mb-8 h-8 w-8" />
+          <h1 className="mb-8 text-2xl font-bold text-green-800">
+            Payment Gateway
+          </h1>
+        </div>
 
         {/* Card Preview */}
-        <div className="mb-8 p-6 rounded-xl bg-gradient-to-br from-green-500 to-green-700 text-white shadow-lg">
+        <div className="mb-8 p-6 rounded-xl bg-gradient-to-br from-green-500 to-green-700 text-white shadow-2xl transform scale-105 transition duration-300">
           <div className="text-sm uppercase tracking-wide">Card Preview</div>
           <div className="mt-4 text-xl font-bold">
             {cardNumber || "**** **** **** ****"}
@@ -244,6 +263,10 @@ const CardPayment = () => {
         <form onSubmit={handleSaveCard} className="space-y-6">
           {/* Card Holder Name */}
           <div>
+            <hr className="my-6 border-t border-gray-300" />
+            <h3 className="text-xl font-bold text-gray-800 mb-6">
+              Enter Card Details
+            </h3>
             <label className="block mb-1 font-semibold text-gray-700">
               Card Holder Name
             </label>
@@ -254,7 +277,13 @@ const CardPayment = () => {
                 className="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
                 placeholder="John Doe"
                 value={cardHolderName}
-                onChange={(e) => setCardHolderName(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setCardHolderName(value);
+                  if (/^[A-Za-z\s]+$/.test(value)) {
+                    setCardHolderNameError("");
+                  }
+                }}
                 disabled={isInputDisabled}
               />
               {cardHolderNameError && (
@@ -281,6 +310,9 @@ const CardPayment = () => {
                   let value = e.target.value.replace(/\D/g, "");
                   value = value.match(/.{1,4}/g)?.join(" ") || value;
                   setCardNumber(value);
+                  if (/^\d{4} \d{4} \d{4} \d{4}$/.test(value)) {
+                    setCardNumberError("");
+                  }
                 }}
                 disabled={isInputDisabled}
               />
@@ -311,6 +343,21 @@ const CardPayment = () => {
                       value = value.slice(0, 2) + "/" + value.slice(2, 4);
                     }
                     setExpiryDate(value);
+
+                    const [monthStr, yearStr] = value.split("/");
+                    const month = parseInt(monthStr, 10);
+                    const year = parseInt(yearStr, 10);
+                    const now = new Date();
+                    const expiry = new Date(2000 + year, month - 1);
+
+                    if (
+                      /^\d{2}\/\d{2}$/.test(value) &&
+                      month >= 1 &&
+                      month <= 12 &&
+                      expiry >= new Date(now.getFullYear(), now.getMonth())
+                    ) {
+                      setExpiryDateError("");
+                    }
                   }}
                   disabled={isInputDisabled}
                 />
@@ -321,6 +368,7 @@ const CardPayment = () => {
                 )}
               </div>
             </div>
+
             <div className="flex-1">
               <label className="block mb-1 font-semibold text-gray-700">
                 CVV
@@ -332,9 +380,14 @@ const CardPayment = () => {
                   className="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-green-500"
                   placeholder="123"
                   value={cvv}
-                  onChange={(e) => setCvv(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    setCvv(value);
+                    if (/^\d{3}$/.test(value)) {
+                      setCvvError("");
+                    }
+                  }}
                   disabled={isInputDisabled}
-                  // required
                 />
                 {cvvError && (
                   <div style={{ color: "red", fontSize: "12px" }}>

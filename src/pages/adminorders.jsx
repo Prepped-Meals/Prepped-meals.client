@@ -8,6 +8,7 @@ import Header from "../components/headerAdmin";
 
 const AdminOrders = () => {
   const { data: allOrders, isLoading, isError } = useGetAllOrders();
+  // eslint-disable-next-line
   const navigate = useNavigate();
   const [selectedStatus, setSelectedStatus] = useState("all");
 
