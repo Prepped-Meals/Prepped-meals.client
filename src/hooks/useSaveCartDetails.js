@@ -1,27 +1,28 @@
-import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "../api/apiClient.js";
 import { END_POINTS } from "../api/endPoints.js";
+import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "../context/authContext";
 
-// Function to save cart details
-const saveCartDetails = async (cartData) => {
-  try {
-    const response = await apiClient.post(END_POINTS.SAVE_CART_DETAILS, cartData);
-    return response.data;
-  } catch (error) {
-    console.error("API Error:", error.response ? error.response.data : error.message);
-    throw error; // Important for triggering onError
-  }
-};
-
-// Hook to use in components
 export const useSaveCart = () => {
+  const { setUser } = useAuth();
+
   return useMutation({
-    mutationFn: saveCartDetails,
-    onSuccess: () => {
-      console.log("Cart saved successfully");
+    mutationFn: async (cartData) => {
+      const response = await apiClient.post(END_POINTS.SAVE_CART_DETAILS, cartData);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      if (data.success && data.cart?.cart_id) {
+        console.log("Saving cart_id to user:", data.cart.cart_id);
+        setUser((prev) => {
+          const updatedUser = { ...prev, cart_id: data.cart.cart_id };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          return updatedUser;
+        });
+      }
     },
     onError: (error) => {
-      console.log("Error saving cart:", error);
+      console.error("Save Cart Error:", error);
     },
   });
 };

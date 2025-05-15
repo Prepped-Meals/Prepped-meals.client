@@ -4,170 +4,127 @@ import { ROUTES } from "../routes/paths";
 import cartBg from "../assets/images/crt2.jpg";
 import { CartContext } from "../context/cartContext";
 import { useSaveCart } from "../hooks/useSaveCartDetails";
-import { useEditCartDetails } from "../hooks/useEditCartDetails";
 import { useDeleteCartDetails } from "../hooks/useDeleteCartDetails";
 import { useAuth } from "../context/authContext";
+import { apiClient } from "../api/apiClient";
+import { END_POINTS } from "../api/endPoints";
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const {
-    updateCart,
-    customer,
-    cartId,
-    isCartEditing,
-    setCartId,
-    setIsCartEditing,
-    cartSaved,
-    setCartSaved,
-  } = useContext(CartContext);
+  const { user, setUser } = useAuth(); // Get setUser from useAuth
+  const { updateCart, customer } = useContext(CartContext);
 
   const [cartItems, setCartItems] = useState(
     JSON.parse(localStorage.getItem("cart")) || []
   );
+  const [cartId, setCartId] = useState(user?.cart_id || null);
+  const [loadingCartId, setLoadingCartId] = useState(!user?.cart_id);
 
   const { mutate: saveCart, isLoading: savingCart } = useSaveCart();
-  const { mutate: editCart, isLoading: editingCart } = useEditCartDetails();
   const { mutate: deleteCart, isLoading: deletingCart } = useDeleteCartDetails();
 
-  const isEditingAllowed = !cartSaved || isCartEditing;
-
-  const handleSaveCart = () => {
-    if (!user || !user._id) {
-      alert("Customer information is not available. Please log in again.");
-      return;
-    }
-    if (cartItems.length === 0) {
-      alert("Your Cart is Empty.");
-      return;
-    }
-
-    const generatedCartId = `cart_${Date.now()}`;
-    const cartData = {
-      cart_id: generatedCartId,
-      customer: user._id,
-      meals: cartItems.map((item) => ({
-        meal: item.meal,
-        meal_name: item.meal_name,
-        meal_price: item.meal_price,
-        quantity: item.quantity,
-        total_price: item.total_price,
-      })),
+  // Fetch cart_id if not available
+  useEffect(() => {
+    const fetchCartId = async () => {
+      if (!user?.cart_id && user?._id) {
+        try {
+          console.log(`Fetching cart for customer_id: ${user._id}`);
+          const response = await apiClient.get(END_POINTS.GET_CART_BY_CUSTOMER(user._id));
+          if (response.data.success && response.data.cart) {
+            const newCartId = response.data.cart.cart_id;
+            setCartId(newCartId);
+            setUser((prev) => ({ ...prev, cart_id: newCartId }));
+            localStorage.setItem("user", JSON.stringify({ ...user, cart_id: newCartId }));
+          }
+        } catch (error) {
+          console.error("Failed to fetch cart:", error);
+        } finally {
+          setLoadingCartId(false);
+        }
+      } else {
+        setCartId(user?.cart_id || null);
+        setLoadingCartId(false);
+      }
     };
 
-    saveCart(cartData, {
-      onSuccess: () => {
-        alert("Cart saved successfully!");
-        setCartSaved(true);
-        setCartId(generatedCartId);
-      },
-      onError: () => {
-        alert("Failed to save cart. Please try again.");
-      },
+    fetchCartId();
+  }, [user, setUser]);
+
+  const handleIncrease = (item) => {
+    setCartItems((prevItems) =>
+      prevItems.map((i) =>
+        i.meal === item.meal
+          ? {
+              ...i,
+              quantity: i.quantity + 1,
+              total_price: i.meal_price * (i.quantity + 1),
+            }
+          : i
+      )
+    );
+
+    saveCart({
+      customer: user._id,
+      meal: item.meal,
+      meal_name: item.meal_name,
+      meal_price: item.meal_price,
+      action: "increase",
     });
   };
 
-  const handleEditCart = () => {
-    setIsCartEditing(true);
-  };
+  const handleDecrease = (item) => {
+    setCartItems((prevItems) =>
+      prevItems.map((i) =>
+        i.meal === item.meal && i.quantity > 1
+          ? {
+              ...i,
+              quantity: i.quantity - 1,
+              total_price: i.meal_price * (i.quantity - 1),
+            }
+          : i
+      )
+    );
 
-  const handleSaveEditedCart = () => {
-    if (!cartId) {
-      alert("No cart found to update. Please save cart first.");
-      return;
-    }
-
-    const updatedCartData = {
-      cart_id: cartId,
-      customer: user._id,
-      meals: cartItems.map((item) => ({
+    if (item.quantity > 1) {
+      saveCart({
+        customer: user._id,
         meal: item.meal,
         meal_name: item.meal_name,
         meal_price: item.meal_price,
-        quantity: item.quantity,
-        total_price: item.total_price,
-      })),
-    };
+        action: "decrease",
+      });
+    }
+  };
 
-    editCart(
-      { cart_id: cartId, updatedCartData },
+  const handleRemove = (meal_id) => {
+    if (!cartId) {
+      alert("Cart ID not available. Please try again.");
+      return;
+    }
+
+    const prevItems = [...cartItems];
+    setCartItems((prevItems) => prevItems.filter((item) => item.meal !== meal_id));
+
+    console.log(`Calling deleteCart with cart_id: ${cartId}, meal_id: ${meal_id}`);
+    deleteCart(
+      { cart_id: cartId, meal_id },
       {
         onSuccess: () => {
-          alert("Cart updated successfully!");
-          setIsCartEditing(false);
+          alert("Meal removed from cart successfully!");
         },
-        onError: () => {
-          alert("Failed to update cart. Please try again.");
+        onError: (error) => {
+          console.error("Delete error:", error);
+          alert("Failed to remove meal from cart. Please try again.");
+          setCartItems(prevItems);
         },
       }
     );
   };
 
-  const handleDeleteCart = () => {
-    if (!cartId) {
-      alert("No saved cart to delete.");
-      return;
-    }
-
-    if (window.confirm("Are you sure you want to delete the cart?")) {
-      deleteCart(cartId, {
-        onSuccess: () => {
-          alert("Cart deleted successfully!");
-          localStorage.removeItem("cart");
-          setCartItems([]);
-          setCartSaved(false);
-          setIsCartEditing(false);
-          setCartId(null);
-          updateCart([]);
-        },
-        onError: () => {
-          alert("Failed to delete cart. Please try again.");
-        },
-      });
-    }
-  };
-
-  const handleIncrease = (id) => {
-    if (!isEditingAllowed) return;
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.meal === id
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-              total_price: item.meal_price * (item.quantity + 1),
-            }
-          : item
-      )
-    );
-  };
-
-  const handleDecrease = (id) => {
-    if (!isEditingAllowed) return;
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.meal === id && item.quantity > 1
-          ? {
-              ...item,
-              quantity: item.quantity - 1,
-              total_price: item.meal_price * (item.quantity - 1),
-            }
-          : item
-      )
-    );
-  };
-
-  const handleRemove = (id) => {
-    if (!isEditingAllowed) return;
-    setCartItems((prevItems) => prevItems.filter((item) => item.meal !== id));
-  };
-
   useEffect(() => {
-    if (!cartSaved || isCartEditing) {
-      localStorage.setItem("cart", JSON.stringify(cartItems));
-      updateCart(cartItems);
-    }
-  }, [cartItems, updateCart, cartSaved, isCartEditing]);
+    localStorage.setItem("cart", JSON.stringify(cartItems));
+    updateCart(cartItems);
+  }, [cartItems, updateCart]);
 
   const subtotal = cartItems.reduce(
     (total, item) => total + (item.total_price || 0),
@@ -176,8 +133,8 @@ const Cart = () => {
   const deliveryFee = 300;
   const total = subtotal + deliveryFee;
 
-  if (customer === null) {
-    return <div>Loading customer information...</div>;
+  if (customer === null || loadingCartId) {
+    return <div>Loading cart information...</div>;
   }
 
   return (
@@ -219,25 +176,29 @@ const Cart = () => {
                   </td>
                   <td className="p-2 flex items-center space-x-2">
                     <button
-                      onClick={() => handleIncrease(item.meal)}
+                      onClick={() => handleIncrease(item)}
                       className="px-2 py-1 bg-gray-300 rounded text-lg font-bold"
-                      disabled={!isEditingAllowed}
+                      disabled={savingCart}
                     >
                       +
                     </button>
                     <button
-                      onClick={() => handleDecrease(item.meal)}
+                      onClick={() => handleDecrease(item)}
                       className="px-2 py-1 bg-gray-300 rounded text-lg font-bold"
-                      disabled={!isEditingAllowed}
+                      disabled={savingCart}
                     >
                       -
                     </button>
                   </td>
                   <td className="p-2">
                     <button
-                      onClick={() => handleRemove(item.meal)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        console.log("Dustbin button clicked for meal:", item.meal);
+                        handleRemove(item.meal);
+                      }}
                       className="text-gray-600 hover:text-red-500 text-lg"
-                      disabled={!isEditingAllowed}
+                      disabled={deletingCart || !cartId}
                     >
                       🗑️
                     </button>
@@ -266,12 +227,7 @@ const Cart = () => {
             <div className="flex justify-between mt-6">
               <button
                 onClick={() => navigate(ROUTES.MENU)}
-                className={`${
-                  isEditingAllowed
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-gray-400 cursor-not-allowed"
-                } text-white px-4 py-2 rounded-lg transition`}
-                disabled={!isEditingAllowed}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition"
               >
                 Add more Meals
               </button>
@@ -283,47 +239,6 @@ const Cart = () => {
               </button>
             </div>
           )}
-
-          <div className="mt-4 text-center space-x-4">
-            {!cartSaved && !isCartEditing && (
-              <button
-                onClick={handleSaveCart}
-                disabled={savingCart}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition"
-              >
-                {savingCart ? "Saving..." : "Save Cart"}
-              </button>
-            )}
-
-            {cartSaved && !isCartEditing && (
-              <>
-                <button
-                  onClick={handleEditCart}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition"
-                >
-                  Edit Cart
-                </button>
-
-                <button
-                  onClick={handleDeleteCart}
-                  disabled={deletingCart}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition"
-                >
-                  {deletingCart ? "Deleting..." : "Delete Cart"}
-                </button>
-              </>
-            )}
-
-            {isCartEditing && (
-              <button
-                onClick={handleSaveEditedCart}
-                disabled={editingCart}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition"
-              >
-                {editingCart ? "Saving Changes..." : "Save Edited Cart"}
-              </button>
-            )}
-          </div>
         </div>
       </div>
     </div>
