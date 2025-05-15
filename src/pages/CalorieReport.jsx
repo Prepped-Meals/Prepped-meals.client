@@ -42,12 +42,28 @@ const CalorieReport = () => {
     fetchCustomer();
   }, [navigate]);
 
+  // Validate the dates to ensure they are in the correct format and range
+  const validateDates = () => {
+    if (!startDate || !endDate) {
+      setError("Both start and end dates are required.");
+      return false;
+    }
+    if (new Date(startDate) > new Date(endDate)) {
+      setError("Start date cannot be later than end date.");
+      return false;
+    }
+    if (new Date(startDate) < new Date('1900-01-01') || new Date(endDate) < new Date('1900-01-01')) {
+      setError("Please select valid dates.");
+      return false;
+    }
+    return true;
+  };
+
   const generateReport = async () => {
     setLoading(true);
     setError(null);
 
-    if (!startDate || !endDate) {
-      setError("Select start and end dates.");
+    if (!validateDates()) {
       setLoading(false);
       return;
     }
@@ -97,7 +113,6 @@ const CalorieReport = () => {
       alert("Failed to download PDF.");
     }
   };
-  
 
   const chartData = useMemo(() => ({
     labels: reportData.map(item => item.date),
