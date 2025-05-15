@@ -1,79 +1,144 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/authContext";
 import { useGetOrdersByCustomer } from "../hooks/useGetOrders.js";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import logo from '../assets/images/logo.png';
-
+import logo from "../assets/images/logo.png";
 
 const Orders = () => {
   const { user } = useAuth();
-  const { data: customerOrders, isLoading, isError } = useGetOrdersByCustomer(user?._id);
+  const {
+    data: customerOrders,
+    isLoading,
+    isError,
+  } = useGetOrdersByCustomer(user?._id);
 
-  if (isLoading) return <div style={styles.message}>Loading your orders...</div>;
-  if (isError) return <div style={styles.message}>Something went wrong while fetching orders.</div>;
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [reportSummary, setReportSummary] = useState(null);
+  const today = new Date().toISOString().split("T")[0];
 
-  if (!customerOrders?.data?.length) {
+  if (isLoading)
+    return <div style={styles.message}>Loading your orders...</div>;
+  if (isError)
+    return (
+      <div style={styles.message}>
+        Something went wrong while fetching orders.
+      </div>
+    );
+  if (!customerOrders?.data?.length)
     return <div style={styles.message}>You have no orders yet.</div>;
-  }
 
-  
-  // Generate Professional Weekly Report
-  const generateWeeklyReport = async () => {
-    const now = new Date();
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())); // Sunday as start
-  
-    const weeklyOrders = customerOrders.data.filter((order) => {
+  const validateDates = () => {
+    if (!startDate || !endDate) {
+      alert("Please select both start and end dates.");
+      return false;
+    }
+    if (new Date(startDate) > new Date(endDate)) {
+      alert("Start date must be before end date.");
+      return false;
+    }
+    return true;
+  };
+
+  const viewReportSummary = () => {
+    if (!validateDates()) return;
+
+    const from = new Date(startDate);
+    const to = new Date(endDate);
+    to.setHours(23, 59, 59, 999);
+
+    const filteredOrders = customerOrders.data.filter((order) => {
       const orderDate = new Date(order.order_received_date);
-      return orderDate >= startOfWeek;
+      return orderDate >= from && orderDate <= to;
     });
-  
+
     const mealSummary = {};
-    weeklyOrders.forEach((order) => {
+    filteredOrders.forEach((order) => {
       order.cart_items.forEach((item) => {
         if (!mealSummary[item.meal_name]) {
-          mealSummary[item.meal_name] = { quantity: 0, price: item.meal_price, totalPrice: 0 };
+          mealSummary[item.meal_name] = {
+            quantity: 0,
+            price: item.meal_price,
+            totalPrice: 0,
+          };
         }
         mealSummary[item.meal_name].quantity += item.quantity;
         mealSummary[item.meal_name].totalPrice += item.total_price;
       });
     });
-  
+
+    setReportSummary({
+      mealSummary,
+      total: Object.values(mealSummary).reduce(
+        (sum, item) => sum + item.totalPrice,
+        0
+      ),
+    });
+  };
+
+  const generateWeeklyReport = () => {
+    if (!validateDates()) return;
+
+    const from = new Date(startDate);
+    const to = new Date(endDate);
+    to.setHours(23, 59, 59, 999);
+
+    const filteredOrders = customerOrders.data.filter((order) => {
+      const orderDate = new Date(order.order_received_date);
+      return orderDate >= from && orderDate <= to;
+    });
+
+    const mealSummary = {};
+    filteredOrders.forEach((order) => {
+      order.cart_items.forEach((item) => {
+        if (!mealSummary[item.meal_name]) {
+          mealSummary[item.meal_name] = {
+            quantity: 0,
+            price: item.meal_price,
+            totalPrice: 0,
+          };
+        }
+        mealSummary[item.meal_name].quantity += item.quantity;
+        mealSummary[item.meal_name].totalPrice += item.total_price;
+      });
+    });
+
+    const total = Object.values(mealSummary).reduce(
+      (sum, item) => sum + item.totalPrice,
+      0
+    );
+
+    // PDF Generation
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
       format: "a4",
     });
-  
     const pageWidth = doc.internal.pageSize.getWidth();
-  
-    // Header
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(24);
     doc.text("Heatn'Eat", pageWidth / 2, 20, { align: "center" });
-  
+
     doc.setFontSize(18);
-    doc.text("Weekly Meal Payment Overview", pageWidth / 2, 30, { align: "center" });
-  
-    // Report Generated Date
+    doc.text("Meal Payment Overview", pageWidth / 2, 30, { align: "center" });
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
-    doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 14, 40);
-  
-    // Line Separator
-    doc.setDrawColor(0);
-    doc.line(10, 45, pageWidth - 10, 45);
-  
-    // Table
+    doc.text(`Date Range: ${startDate} to ${endDate}`, 14, 38);
+    doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 14, 44);
+    doc.line(10, 48, pageWidth - 10, 48);
+
     const mealData = Object.entries(mealSummary).map(([meal, details]) => [
       meal,
       details.quantity,
       `Rs. ${details.price.toFixed(2)}`,
       `Rs. ${details.totalPrice.toFixed(2)}`,
     ]);
-  
-    autoTable(doc,{
-      startY: 50,
+
+    autoTable(doc, {
+      startY: 52,
       head: [["Meal Name", "Quantity", "Unit Price", "Total Price"]],
       body: mealData,
       styles: {
@@ -91,139 +156,273 @@ const Orders = () => {
       theme: "striped",
       margin: { left: 14, right: 14 },
     });
-  
-    // Total Spent Section
+
     const finalY = doc.lastAutoTable.finalY || 60;
-    const totalSpent = Object.values(mealSummary).reduce((sum, item) => sum + item.totalPrice, 0);
-  
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("Summary", 14, finalY + 15);
-  
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
-    doc.text(`Total Amount Spent on Meals: Rs. ${totalSpent.toFixed(2)}`, 14, finalY + 25);
-  
-    // Footer
+    doc.text(
+      `Total Amount Spent on Meals: Rs. ${total.toFixed(2)}`,
+      14,
+      finalY + 25
+    );
+
     doc.setFontSize(10);
     doc.setTextColor(150);
-    doc.text("Thank you for your !", pageWidth / 2, 290, { align: "center" });
-  
-    doc.save("Weekly_Meal_Report.pdf");
-  };
-  
+    doc.text("Thank you for your order!", pageWidth / 2, 290, {
+      align: "center",
+    });
 
-  // Generate Professional Receipt
+    doc.save("Meal_Report.pdf");
+  };
+
   const generateReceipt = async (order) => {
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
       format: "a4",
     });
-  
+
     const pageWidth = doc.internal.pageSize.getWidth();
-  
     const img = new Image();
     img.src = logo;
-  
+
     img.onload = () => {
-      // Add logo
-      const imgWidth = 40; 
-      const imgHeight = 20; 
+      const imgWidth = 40;
+      const imgHeight = 20;
       const imgX = (pageWidth - imgWidth) / 2;
       doc.addImage(img, "PNG", imgX, 10, imgWidth, imgHeight);
-  
-      // Add Title
+
       doc.setFont("helvetica", "bold");
       doc.setFontSize(22);
       doc.text("Order Receipt", pageWidth / 2, 40, { align: "center" });
-  
-      // Line separator
       doc.setDrawColor(0);
       doc.line(10, 45, pageWidth - 10, 45);
-  
-      // Order Details
+
       doc.setFont("helvetica", "normal");
       doc.setFontSize(12);
-      const orderInfoY = 55;
+
+      const labelX = 14;
+      const valueX = 60;
       const lineHeight = 8;
-  
-      doc.text(`Order ID: ${order._id}`, 14, orderInfoY);
-      doc.text(`Status: ${order.order_status}`, 14, orderInfoY + lineHeight);
-      doc.text(` Date: ${new Date(order.order_received_date).toLocaleDateString()}`, 14, orderInfoY + lineHeight * 2);
-  
-      // Payment Details Section Title
+      let y = 55;
+
+      // Order Info
+      doc.text("Order ID:", labelX, y);
+      doc.text(order._id, valueX, y);
+
+      doc.text("Status:", labelX, (y += lineHeight));
+      doc.text(order.order_status, valueX, y);
+
+      doc.text("Date:", labelX, (y += lineHeight));
+      doc.text(
+        new Date(order.order_received_date).toLocaleDateString(),
+        valueX,
+        y
+      );
+
+      // Payment Details Title
+      y += lineHeight * 2;
       doc.setFont("helvetica", "bold");
-      doc.text("Payment Details:", 14, orderInfoY + lineHeight * 4);
-  
-      // Payment Details
+      doc.text("Payment Details:", labelX, y);
       doc.setFont("helvetica", "normal");
-  
-      // Address with multi-line handling
-      const addressText = `Receiver's Name & Address: ${order.payment?.address || "-"}`;
-      const addressWidth = pageWidth - 28; // 14 left + 14 right margins
-      const addressLines = doc.splitTextToSize(addressText, addressWidth);
-      doc.text(addressLines, 14, orderInfoY + lineHeight * 5);
-  
-      // Calculate dynamic Y position based on address lines
-      const addressLineCount = addressLines.length;
-      const nextFieldY = orderInfoY + lineHeight * (5 + addressLineCount);
-  
-      doc.text(`Phone: ${order.payment?.phone_number}`, 14, nextFieldY);
-      doc.text(`Amount: Rs. ${order.payment?.payment_amount}`, 14, nextFieldY + lineHeight);
-      doc.text(`Payment Type: ${order.payment?.payment_type}`, 14, nextFieldY + lineHeight * 2);
-  
+
+      // Address (can be multiline)
+      y += lineHeight;
+      doc.text("Name & Address:", labelX, y);
+      const addressValue = order.payment?.address || "-";
+      const wrappedAddress = doc.splitTextToSize(
+        addressValue,
+        pageWidth - valueX - 14
+      );
+      doc.text(wrappedAddress, valueX, y);
+      y += lineHeight * wrappedAddress.length;
+
+      // Phone, Amount, Payment Type
+      doc.text("Phone:", labelX, y);
+      doc.text(order.payment?.phone_number || "-", valueX, y);
+
+      doc.text("Amount:", labelX, (y += lineHeight));
+      doc.text(`Rs. ${order.payment?.payment_amount}`, valueX, y);
+
+      doc.text("Payment Type:", labelX, (y += lineHeight));
+      doc.text(order.payment?.payment_type || "-", valueX, y);
+
       // Cart Items Table
-      const startY = nextFieldY + lineHeight * 4;
+      const startY = y + lineHeight * 2;
       const cartItems = order.cart_items.map((item) => [
         item.meal_name,
         item.quantity,
         `Rs. ${item.meal_price.toFixed(2)}`,
         `Rs. ${item.total_price.toFixed(2)}`,
       ]);
-  
-      autoTable(doc,{
+
+      autoTable(doc, {
         startY: startY,
         head: [["Meal", "Quantity", "Unit Price", "Total"]],
         body: cartItems,
-        styles: {
-          halign: "center",
-          fontSize: 11,
-          cellPadding: 3,
-        },
+        styles: { halign: "center", fontSize: 11, cellPadding: 3 },
         headStyles: {
           fillColor: [41, 128, 185],
           fontSize: 13,
           fontStyle: "bold",
         },
-        theme: 'striped',
+        theme: "striped",
         margin: { left: 14, right: 14 },
       });
-  
-      // Footer
+
       const finalY = doc.lastAutoTable.finalY || startY + 20;
       doc.setFontSize(10);
       doc.setTextColor(150);
-      doc.text("Thank you for ordering with us!", pageWidth / 2, finalY + 20, { align: "center" });
-  
-      // Save PDF
+      doc.text("Thank you for ordering with us!", pageWidth / 2, finalY + 20, {
+        align: "center",
+      });
+
       doc.save(`Receipt_${order._id}.pdf`);
     };
-  
+
     img.onerror = () => {
       console.error("Failed to load logo image.");
     };
   };
-  
-
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>My Orders</h2>
+      <h2
+        style={{
+          fontSize: "32px",
+          fontWeight: "bold",
+          color: "#2c3e50",
+          textAlign: "center",
+          marginBottom: "20px",
+          textTransform: "uppercase",
+          borderBottom: "3px solid #16a085",
+          paddingBottom: "8px",
+        }}
+      >
+        My Orders
+      </h2>
 
-      <button onClick={generateWeeklyReport} style={styles.button}>
-        Generate Weekly Meal Report
-      </button>
+      {/* Report Generator Section */}
+      <div style={styles.reportContainer}>
+        <h3
+          style={{
+            fontSize: "24px",
+            fontWeight: "600",
+            color: "#2c3e50",
+            marginBottom: "10px",
+            textAlign: "center",
+            textTransform: "uppercase",
+            letterSpacing: "1px",
+          }}
+        >
+          📑 Generate Your Payment Report
+        </h3>
 
+        <p
+          style={{
+            backgroundColor: "#eafaf1",
+            borderLeft: "6px solid #16a085",
+            padding: "12px 16px",
+            borderRadius: "8px",
+            fontSize: "16px",
+            color: "#2c3e50",
+            fontWeight: "500",
+            marginBottom: "20px",
+            textAlign: "center",
+          }}
+        >
+          Easily select a date range to{" "}
+          <strong>view your payment summary</strong> and{" "}
+          <strong>download a detailed PDF report</strong> for your records.
+        </p>
+
+        <div style={styles.dateRow}>
+          <div>
+            <label>Start Date:</label>
+            <br />
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              max={today}
+              style={styles.dateInput}
+            />
+          </div>
+          <div>
+            <label>End Date:</label>
+            <br />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              max={today}
+              style={styles.dateInput}
+            />
+          </div>
+        </div>
+
+        <div style={styles.buttonRow}>
+          <button
+            onClick={viewReportSummary}
+            style={{ ...styles.button, backgroundColor: "#16a085" }}
+          >
+            View Report Summary
+          </button>
+          <button onClick={generateWeeklyReport} style={styles.button}>
+            Download PDF Report
+          </button>
+          {reportSummary && (
+            <button
+              onClick={() => setReportSummary(null)}
+              style={{ ...styles.button, backgroundColor: "#16a085" }}
+            >
+              Clear Summary
+            </button>
+          )}
+        </div>
+
+        {/* Summary Display */}
+        {reportSummary && (
+          <div style={styles.summaryBox}>
+            <h4 style={{ marginBottom: "0.5rem", color: "#2c3e50" }}>
+              Report Summary
+            </h4>
+            <ul>
+              {Object.entries(reportSummary.mealSummary).map(
+                ([meal, details]) => (
+                  <li key={meal}>
+                    {meal} — {details.quantity} x Rs. {details.price.toFixed(2)}{" "}
+                    = Rs. {details.totalPrice.toFixed(2)}
+                  </li>
+                )
+              )}
+            </ul>
+            <p>
+              <strong>Total Spent:</strong> Rs. {reportSummary.total.toFixed(2)}
+            </p>
+          </div>
+        )}
+      </div>
+      <h3
+        style={{
+          fontSize: "24px",
+          fontWeight: "600",
+          color: "#2c3e50",
+          marginTop: "40px",
+          marginBottom: "20px",
+          borderBottom: "2px solid #16a085",
+          paddingBottom: "8px",
+          textAlign: "center",
+          textTransform: "uppercase",
+          letterSpacing: "1px",
+        }}
+      >
+        🗂️ Order History
+      </h3>
+
+      {/* Order Cards */}
       <div style={styles.ordersList}>
         {customerOrders.data.map((order) => (
           <div key={order._id} style={styles.orderCard}>
@@ -234,14 +433,25 @@ const Orders = () => {
                 {order.order_status}
               </span>
             </p>
-            <p><strong>Billing Date:</strong> {new Date(order.order_received_date).toLocaleDateString()}</p>
+            <p>
+              <strong>Billing Date:</strong>{" "}
+              {new Date(order.order_received_date).toLocaleDateString()}
+            </p>
 
             <div style={styles.paymentDetailsSection}>
               <h4>Payment Details</h4>
-              <p><strong>Receiver's Name & Address:</strong> {order.payment?.address}</p>
-              <p><strong>Phone:</strong> {order.payment?.phone_number}</p>
-              <p><strong>Amount:</strong> Rs. {order.payment?.payment_amount}</p>
-              <p><strong>Payment Type:</strong> {order.payment?.payment_type}</p>
+              <p>
+                <strong>Name & Address:</strong> {order.payment?.address}
+              </p>
+              <p>
+                <strong>Phone:</strong> {order.payment?.phone_number}
+              </p>
+              <p>
+                <strong>Amount:</strong> Rs. {order.payment?.payment_amount}
+              </p>
+              <p>
+                <strong>Payment Type:</strong> {order.payment?.payment_type}
+              </p>
             </div>
 
             <div style={styles.cartItemsSection}>
@@ -249,13 +459,17 @@ const Orders = () => {
               <ul style={styles.cartList}>
                 {order.cart_items.map((item, idx) => (
                   <li key={idx} style={styles.cartItem}>
-                    {item.meal_name} — {item.quantity} x Rs. {item.meal_price} = Rs. {item.total_price}
+                    {item.meal_name} — {item.quantity} x Rs. {item.meal_price} =
+                    Rs. {item.total_price}
                   </li>
                 ))}
               </ul>
             </div>
 
-            <button onClick={() => generateReceipt(order)} style={styles.buttonSmall}>
+            <button
+              onClick={() => generateReceipt(order)}
+              style={styles.buttonSmall}
+            >
               Generate Receipt
             </button>
           </div>
@@ -276,6 +490,35 @@ const styles = {
     fontSize: "2rem",
     color: "#2c3e50",
     fontFamily: "'Playfair Display', serif",
+  },
+  reportContainer: {
+    border: "1px solid #ddd",
+    borderRadius: "10px",
+    padding: "1.5rem",
+    backgroundColor: "#ffffff",
+    marginBottom: "2rem",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+  },
+  sectionTitle: {
+    fontSize: "1.25rem",
+    marginBottom: "1rem",
+    color: "#2980b9",
+  },
+  dateRow: {
+    display: "flex",
+    gap: "1rem",
+    marginBottom: "1rem",
+  },
+  buttonRow: {
+    display: "flex",
+    gap: "1rem",
+    marginBottom: "1rem",
+  },
+  summaryBox: {
+    backgroundColor: "#ecf0f1",
+    padding: "1rem",
+    borderRadius: "8px",
+    fontSize: "1rem",
   },
   ordersList: {
     display: "grid",
@@ -322,7 +565,6 @@ const styles = {
     padding: "20px",
   },
   button: {
-    marginBottom: "2rem",
     padding: "10px 20px",
     backgroundColor: "#2980b9",
     color: "white",
@@ -352,6 +594,12 @@ const styles = {
       default:
         return { color: "#333" };
     }
+  },
+  dateInput: {
+    padding: "8px",
+    borderRadius: "5px",
+    border: "1px solid #ccc",
+    fontSize: "1rem",
   },
 };
 

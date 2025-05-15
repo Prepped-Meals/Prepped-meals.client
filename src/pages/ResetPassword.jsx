@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { apiClient } from "../api/apiClient";
+import { FiLock, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 
 const ResetPassword = () => {
   const [formData, setFormData] = useState({
@@ -26,7 +27,6 @@ const ResetPassword = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setErrors((prev) => ({ ...prev, [e.target.name]: "" })); // clear error on change
   };
-
 
   //validations
   const validate = () => {
@@ -86,63 +86,112 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#E9F5EC] via-[#F4F9F4] to-[#D7E7DC] flex items-center justify-center px-4">
-      <div className="w-full max-w-md backdrop-blur-md bg-white/70 border border-[#dbe7dc] p-8 rounded-3xl shadow-2xl transition-all duration-300">
-        <div className="text-center mb-6">
-          <div className="text-5xl animate-pulse">🔐</div>
-          <h2 className="text-2xl font-extrabold text-[#004225] mt-2">Reset Password</h2>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+        {/* Header Section */}
+        <div className="bg-green-800 py-6 px-8 text-white">
+          <div className="flex justify-center mb-3">
+            <div className="bg-white/20 p-3 rounded-full">
+              <FiLock className="h-6 w-6" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-center">Reset Your Password</h2>
+          <p className="text-green-100 text-sm text-center mt-1">
+            Secure your account with a new password
+          </p>
         </div>
 
-        {message && (
-          <div
-            className={`text-sm mb-4 text-center font-medium ${
-              message.includes("success") ? "text-green-600" : "text-red-500"
-            }`}
-          >
-            {message}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {[
-            { name: "currentPassword", label: "Current Password", field: "current" },
-            { name: "newPassword", label: "New Password", field: "new" },
-            { name: "confirmPassword", label: "Confirm New Password", field: "confirm" },
-          ].map(({ name, label, field }) => (
-            <div key={name}>
-              <label className="block text-sm font-semibold text-[#004225] mb-1">{label}</label>
-              <div className="relative">
-                <input
-                  type={showPassword[field] ? "text" : "password"}
-                  name={name}
-                  value={formData[name]}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 text-sm text-[#004225] bg-[#f3f6f1] border ${
-                    errors[name] ? "border-red-400" : "border-[#bfcab3]"
-                  } rounded-xl focus:outline-none focus:ring-2 ${
-                    errors[name] ? "focus:ring-red-500" : "focus:ring-[#004225]"
-                  } pr-10 transition-all duration-200`}
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#004225] hover:text-[#002912] transition-colors"
-                  onClick={() => toggleVisibility(field)}
-                >
-                  {showPassword[field] ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              {errors[name] && <p className="text-xs text-red-500 mt-1">{errors[name]}</p>}
+        {/* Form Container */}
+        <div className="p-8">
+          {message && (
+            <div
+              className={`flex items-center justify-center p-3 mb-6 rounded-lg ${
+                message.includes("success")
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              }`}
+            >
+              {message.includes("success") ? (
+                <FiCheckCircle className="mr-2" />
+              ) : (
+                <FiAlertCircle className="mr-2" />
+              )}
+              <span className="text-sm font-medium">{message}</span>
             </div>
-          ))}
+          )}
 
-          <button
-            type="submit"
-            className="w-full py-2 mt-2 bg-[#004225] hover:bg-[#002912] text-white font-semibold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
-          >
-            Save Changes
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {[
+              { name: "currentPassword", label: "Current Password", field: "current" },
+              { name: "newPassword", label: "New Password", field: "new" },
+              { name: "confirmPassword", label: "Confirm Password", field: "confirm" },
+            ].map(({ name, label, field }) => (
+              <div key={name}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {label}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword[field] ? "text" : "password"}
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-3 text-sm bg-gray-50 border ${
+                      errors[name] ? "border-red-400" : "border-gray-300"
+                    } rounded-lg focus:outline-none focus:ring-2 ${
+                      errors[name] ? "focus:ring-red-300" : "focus:ring-green-300"
+                    } focus:border-transparent pr-10 transition-all`}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    onClick={() => toggleVisibility(field)}
+                  >
+                    {showPassword[field] ? (
+                      <EyeOff size={18} className="text-green-800" />
+                    ) : (
+                      <Eye size={18} className="text-green-800" />
+                    )}
+                  </button>
+                </div>
+                {errors[name] && (
+                  <p className="mt-1 text-xs text-red-600">{errors[name]}</p>
+                )}
+              </div>
+            ))}
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                className="w-full py-3 bg-green-800 hover:bg-green-900 text-white font-medium rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center"
+              >
+                Update Password
+              </button>
+            </div>
+          </form>
+
+          {/* Password Requirements */}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              Password Requirements
+            </h4>
+            <ul className="text-xs text-gray-600 space-y-1">
+              <li className="flex items-center">
+                <span className="text-green-800 mr-1">•</span>
+                Minimum 6 characters
+              </li>
+              <li className="flex items-center">
+                <span className="text-green-800 mr-1">•</span>
+                Different from current password
+              </li>
+              <li className="flex items-center">
+                <span className="text-green-800 mr-1">•</span>
+                Must match confirmation
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );

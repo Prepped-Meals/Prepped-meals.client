@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Button from "../components/button.js";
 import { useAuth } from "../context/authContext"; 
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom'; 
+import { FiEdit, FiSave, FiTrash2, FiFileText, FiX, FiUser, FiPhone, FiMail } from 'react-icons/fi';
 
-const CALORIE_REPORT = "/calorieReport"; // Define the constant for the path
+const CALORIE_REPORT = "/calorieReport"; 
 
 const CustomerProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -18,10 +19,9 @@ const CustomerProfile = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [attemptedSave, setAttemptedSave] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { logout } = useAuth(); 
-  const navigate = useNavigate(); // Initialize useNavigate hook
+  const navigate = useNavigate(); 
 
   const fetchProfile = async () => {
     try {
@@ -53,43 +53,76 @@ const CustomerProfile = () => {
     fetchProfile();
   }, []);
 
-  //validations
-  const validateFields = () => {
-    const newErrors = {};
+  // Validation function 
+  const validateFields = (fieldName) => {
+    const newErrors = { ...errors };
 
-    if (!profileData.firstName.trim()) newErrors.firstName = "This field is required";
-    if (!profileData.lastName.trim()) newErrors.lastName = "This field is required";
-
-    if (!profileData.phoneNumber.trim()) {
-      newErrors.phoneNumber = "This field is required";
-    } else if (!/^\d{10}$/.test(profileData.phoneNumber)) {
-      newErrors.phoneNumber = "Phone number must be 10 digits";
+    if (fieldName === "firstName") {
+      if (!profileData.firstName.trim()) newErrors.firstName = "This field is required";
+      else if (!/^[A-Za-z]+$/.test(profileData.firstName)) {
+        newErrors.firstName = "First name cannot contain numbers";
+      } else {
+        delete newErrors.firstName;
+      }
     }
 
-    if (!profileData.email.trim()) {
-      newErrors.email = "This field is required";
-    } else if (!/^\S+@\S+\.\S+$/.test(profileData.email)) {
-      newErrors.email = "Invalid email address";
+    if (fieldName === "lastName") {
+      if (!profileData.lastName.trim()) newErrors.lastName = "This field is required";
+      else if (!/^[A-Za-z]+$/.test(profileData.lastName)) {
+        newErrors.lastName = "Last name cannot contain numbers";
+      } else {
+        delete newErrors.lastName;
+      }
+    }
+
+    if (fieldName === "phoneNumber") {
+      if (!profileData.phoneNumber.trim()) newErrors.phoneNumber = "This field is required";
+      else if (!/^\d{10}$/.test(profileData.phoneNumber)) {
+        newErrors.phoneNumber = "Phone number must be 10 digits";
+      } else {
+        delete newErrors.phoneNumber;
+      }
+    }
+
+    if (fieldName === "email") {
+      if (!profileData.email.trim()) newErrors.email = "This field is required";
+      else if (!/^\S+@\S+\.\S+$/.test(profileData.email)) {
+        newErrors.email = "Invalid email address";
+      } else {
+        delete newErrors.email;
+      }
+    }
+
+    if (fieldName === "username") {
+      if (!profileData.username.trim()) newErrors.username = "This field is required";
+      else {
+        delete newErrors.username;
+      }
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfileData({ ...profileData, [name]: value });
+
+    // Validate field in real time
+    validateFields(name);
+  };
+
+  const handleBlur = (e) => {
+    validateFields(e.target.name);
   };
 
   const handleEdit = () => {
     setIsEditing(true);
-    setAttemptedSave(false);
     setErrors({});
   };
 
   const handleSave = async () => {
-    setAttemptedSave(true);
-    if (!validateFields()) return;
+    // If any errors exist, do not proceed
+    if (Object.keys(errors).length > 0) return;
 
     try {
       await fetch("http://localhost:8000/api/customers/me", {
@@ -118,8 +151,6 @@ const CustomerProfile = () => {
 
       alert("Profile updated successfully!");
       setIsEditing(false);
-      setAttemptedSave(false);
-      setErrors({});
       fetchProfile();
     } catch (err) {
       console.error(err.message);
@@ -146,7 +177,6 @@ const CustomerProfile = () => {
         method: "DELETE",
         credentials: "include",
       });
-
       if (!res.ok) throw new Error("Could not delete");
 
       alert("Account deleted successfully.");
@@ -157,7 +187,6 @@ const CustomerProfile = () => {
     }
   };
 
-  // Modal handlers
   const openModal = () => {
     setIsModalOpen(true);
   };
@@ -167,107 +196,235 @@ const CustomerProfile = () => {
   };
 
   const handleReportOption = (reportType) => {
-    console.log("Report option clicked:", reportType); // Debugging line
     if (reportType === "Calorie Consumption") {
-      // Use the CALORIE_REPORT constant for the path
       navigate(CALORIE_REPORT);
     }
-    closeModal(); // Close the modal after selection
+    closeModal();
   };
-  
 
   return (
-    <div className="bg-[#f5f7f3] min-h-screen flex items-center justify-center py-10 px-6">
-      <div className="w-full max-w-4xl bg-white rounded-[2rem] shadow-xl flex flex-col md:flex-row overflow-hidden relative">
-        <div className="w-full md:w-1/3 bg-gradient-to-br from-[#E5ECE2] to-[#d2e1cd] flex flex-col items-center py-10 px-4 relative z-10">
-          <div className="w-24 h-24 rounded-full bg-white shadow-md overflow-hidden">
-            <img
-              src={profileData.profilePic || 'http://localhost:8000/uploads/user.png'}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "http://localhost:8000/uploads/user.png";
-              }}
-              alt="profile"
-              className="w-full h-full object-cover"
-            />
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
+          {/* Profile Header */}
+          <div className="bg-green-800 py-6 px-8 text-white">
+            <h1 className="text-2xl font-bold">My Profile</h1>
+            <p className="text-green-100">Manage your account information</p>
           </div>
-          <h3 className="text-xl font-bold mt-4 text-[#243423]">
-            Welcome {profileData.firstName}
-          </h3>
-          {isEditing && (
-            <div className="mt-4">
-              <input type="file" accept="image/*" onChange={handleProfilePicChange} className="mt-2 p-2 text-sm" />
-            </div>
-          )}
-          <div className="flex flex-col gap-3 mt-6 w-full px-6">
-            {!isEditing ? (
-              <Button onClick={handleEdit} className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700">Edit</Button>
-            ) : (
-              <Button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700">Save</Button>
-            )}
-            <Button onClick={handleDeleteAccount} className="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700">Delete Account</Button>
-            <Button onClick={openModal} className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700">Reports</Button>
-          </div>
-        </div>
 
-        <div className="w-full md:w-2/3 p-8 space-y-6 bg-[#fcfcf9]">
-          {['firstName', 'lastName', 'phoneNumber', 'email'].map((field) => (
-            <div key={field}>
-              <label className="text-sm font-medium text-[#243423]">
-                {field === 'firstName' ? 'First Name' :
-                 field === 'lastName' ? 'Last Name' :
-                 field === 'phoneNumber' ? 'Phone Number' : 'Email Address'}
-              </label>
-              <input
-                name={field}
-                value={profileData[field]}
-                onChange={handleChange}
-                disabled={!isEditing}
-                className={`mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 ${
-                  errors[field] && attemptedSave
-                    ? 'border-red-500 ring-red-300'
-                    : 'focus:ring-[#1D6A26]'
-                } bg-white`}
-              />
-              {errors[field] && attemptedSave && (
-                <p className="text-sm text-red-600 mt-1">{errors[field]}</p>
-              )}
+          <div className="flex flex-col md:flex-row">
+            {/* Left Sidebar - Profile Picture and Actions */}
+            <div className="w-full md:w-1/3 bg-gradient-to-b from-green-50 to-green-100 p-6 flex flex-col items-center border-r border-green-200">
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-full bg-white shadow-lg overflow-hidden border-4 border-white">
+                  <img
+                    src={profileData.profilePic || 'http://localhost:8000/uploads/user.png'}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "http://localhost:8000/uploads/user.png";
+                    }}
+                    alt="profile"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {isEditing && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <label className="cursor-pointer text-white text-sm font-medium">
+                      Change Photo
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleProfilePicChange} 
+                        className="hidden" 
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <h2 className="mt-4 text-xl font-semibold text-green-800">
+                {profileData.firstName} {profileData.lastName}
+              </h2>
+              <p className="text-green-800 text-sm">@{profileData.username}</p>
+
+              <div className="mt-6 w-full space-y-3">
+                {!isEditing ? (
+                  <Button 
+                    onClick={handleEdit}
+                    className="w-full bg-green-800 hover:bg-green-900 text-white flex items-center justify-center py-2 px-4 rounded-lg transition-all text-sm"
+                  >
+                    <FiEdit className="mr-2" />
+                    Edit Profile
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleSave}
+                    className="w-full bg-green-800 hover:bg-green-900 text-white flex items-center justify-center py-2 px-4 rounded-lg transition-all text-sm"
+                  >
+                    <FiSave className="mr-2" />
+                    Save Changes
+                  </Button>
+                )}
+
+                <Button 
+                  onClick={openModal}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center py-2 px-4 rounded-lg transition-all text-sm"
+                >
+                  <FiFileText className="mr-2" />
+                  View Reports
+                </Button>
+
+                <Button 
+                  onClick={handleDeleteAccount}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center py-2 px-4 rounded-lg transition-all text-sm"
+                >
+                  <FiTrash2 className="mr-2" />
+                  Delete Account
+                </Button>
+              </div>
             </div>
-          ))}
-          <div>
-            <label className="text-sm font-medium text-[#243423]">Username</label>
-            <input
-              name="username"
-              value={profileData.username}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className={`mt-1 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 ${
-                errors.username && attemptedSave
-                  ? 'border-red-500 ring-red-300'
-                  : 'focus:ring-[#1D6A26]'
-              } bg-white`}
-            />
-            {errors.username && attemptedSave && (
-              <p className="text-sm text-red-600 mt-1">{errors.username}</p>
-            )}
+
+            {/* Right Content - Profile Details */}
+            <div className="w-full md:w-2/3 p-6">
+              <h3 className="text-lg font-semibold text-green-800 mb-4">
+                Account Details
+              </h3>
+
+              <div className="space-y-4">
+                {/* First Name */}
+                <div>
+                  <label className="block text-sm font-medium text-green-800 mb-1 flex items-center">
+                    <FiUser className="mr-2 text-green-800" />
+                    First Name
+                  </label>
+                  <input
+                    name="firstName"
+                    value={profileData.firstName}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    disabled={!isEditing}
+                    className={`w-full p-2 rounded-lg border text-sm ${isEditing ? 'bg-white' : 'bg-gray-50'} ${
+                      errors.firstName ? 'border-red-400 focus:ring-red-300' : 'border-green-200 focus:ring-green-300'
+                    } focus:outline-none focus:ring-1`}
+                  />
+                  {errors.firstName && (
+                    <p className="mt-1 text-xs text-red-600">{errors.firstName}</p>
+                  )}
+                </div>
+
+                {/* Last Name */}
+                <div>
+                  <label className="block text-sm font-medium text-green-800 mb-1 flex items-center">
+                    <FiUser className="mr-2 text-green-800" />
+                    Last Name
+                  </label>
+                  <input
+                    name="lastName"
+                    value={profileData.lastName}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    disabled={!isEditing}
+                    className={`w-full p-2 rounded-lg border text-sm ${isEditing ? 'bg-white' : 'bg-gray-50'} ${
+                      errors.lastName ? 'border-red-400 focus:ring-red-300' : 'border-green-200 focus:ring-green-300'
+                    } focus:outline-none focus:ring-1`}
+                  />
+                  {errors.lastName && (
+                    <p className="mt-1 text-xs text-red-600">{errors.lastName}</p>
+                  )}
+                </div>
+
+                {/* Phone Number */}
+                <div>
+                  <label className="block text-sm font-medium text-green-800 mb-1 flex items-center">
+                    <FiPhone className="mr-2 text-green-800" />
+                    Phone Number
+                  </label>
+                  <input
+                    name="phoneNumber"
+                    value={profileData.phoneNumber}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    disabled={!isEditing}
+                    className={`w-full p-2 rounded-lg border text-sm ${isEditing ? 'bg-white' : 'bg-gray-50'} ${
+                      errors.phoneNumber ? 'border-red-400 focus:ring-red-300' : 'border-green-200 focus:ring-green-300'
+                    } focus:outline-none focus:ring-1`}
+                  />
+                  {errors.phoneNumber && (
+                    <p className="mt-1 text-xs text-red-600">{errors.phoneNumber}</p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-green-800 mb-1 flex items-center">
+                    <FiMail className="mr-2 text-green-800" />
+                    Email Address
+                  </label>
+                  <input
+                    name="email"
+                    value={profileData.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    disabled={!isEditing}
+                    className={`w-full p-2 rounded-lg border text-sm ${isEditing ? 'bg-white' : 'bg-gray-50'} ${
+                      errors.email ? 'border-red-400 focus:ring-red-300' : 'border-green-200 focus:ring-green-300'
+                    } focus:outline-none focus:ring-1`}
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-600">{errors.email}</p>
+                  )}
+                </div>
+
+                {/* Username */}
+                <div>
+                  <label className="block text-sm font-medium text-green-800 mb-1">
+                    Username
+                  </label>
+                  <input
+                    name="username"
+                    value={profileData.username}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    disabled={!isEditing}
+                    className={`w-full p-2 rounded-lg border text-sm ${isEditing ? 'bg-white' : 'bg-gray-50'} ${
+                      errors.username ? 'border-red-400 focus:ring-red-300' : 'border-green-200 focus:ring-green-300'
+                    } focus:outline-none focus:ring-1`}
+                  />
+                  {errors.username && (
+                    <p className="mt-1 text-xs text-red-600">{errors.username}</p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Modal for reports */}
+      {/* Reports Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h3 className="text-lg font-semibold">Select a Report</h3>
-            <Button
-              onClick={() => handleReportOption("Calorie Consumption")}
-              className="w-full bg-green-600 text-white px-4 py-2 rounded-full mb-3"
-            >
-              Calorie Consumption
-            </Button>
-            <Button onClick={closeModal} className="w-full bg-gray-600 text-white px-4 py-2 rounded-full">
-              Close
-            </Button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div className="bg-green-800 px-6 py-4 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-white">Select a Report</h3>
+              <button onClick={closeModal} className="text-white hover:text-green-200">
+                <FiX size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              <Button
+                onClick={() => handleReportOption("Calorie Consumption")}
+                className="w-full bg-green-800 hover:bg-green-900 text-white flex items-center justify-center py-2 px-4 rounded-lg mb-3 transition-all text-sm"
+              >
+                <FiFileText className="mr-2" />
+                Calorie Consumption Report
+              </Button>
+              <Button 
+                onClick={closeModal} 
+                className="w-full bg-gray-600 hover:bg-gray-700 text-white flex items-center justify-center py-2 px-4 rounded-lg transition-all text-sm"
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         </div>
       )}

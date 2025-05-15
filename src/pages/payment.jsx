@@ -13,9 +13,16 @@ const Payment = () => {
   const { mutate: savePaymentDetails } = useSavePaymentDetails();
   const { mutate: saveOrderDetails } = useSaveOrderDetails();
 
+  const [errors, setErrors] = useState({
+    address: "",
+    phoneNumber: "",
+    paymentMethod: "",
+  });
+  const [checkboxError, setCheckboxError] = useState(false);
+
   const [address, setAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("CashOnDelivery");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [isGift, setIsGift] = useState(false);
   const [sendToMyself, setSendToMyself] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -32,11 +39,25 @@ const Payment = () => {
 
   useEffect(() => {
     if (sendToMyself) {
-      setPhoneNumber(profileData.phoneNumber || "");
-      setAddress(profileData.firstName || "");
+      const autoPhone = profileData.phoneNumber || "";
+      const autoAddress = profileData.firstName || "";
+
+      setPhoneNumber(autoPhone);
+      setAddress(autoAddress);
+
+      setErrors((prev) => ({
+        ...prev,
+        phoneNumber: /^\d{10}$/.test(autoPhone) ? "" : prev.phoneNumber,
+      }));
     } else {
       setPhoneNumber("");
       setAddress("");
+
+      setErrors((prev) => ({
+        ...prev,
+        phoneNumber: "",
+        address: "",
+      }));
     }
   }, [sendToMyself, profileData]);
 
@@ -45,14 +66,9 @@ const Payment = () => {
       const res = await fetch("http://localhost:8000/api/customers/me", {
         credentials: "include",
       });
-
       if (!res.ok) throw new Error("Unauthorized");
 
       const data = await res.json();
-      const profilePicPath = data.profile_pic
-        ? `http://localhost:8000${data.profile_pic}`
-        : "http://localhost:8000/uploads/user.png";
-
       setProfileData({
         firstName: data.f_name || "",
         lastName: data.l_name || "",
@@ -64,12 +80,44 @@ const Payment = () => {
     }
   };
 
+  const validateInputs = () => {
+    let valid = true;
+    const newErrors = {
+      address: "",
+      phoneNumber: "",
+      paymentMethod: "",
+    };
+    setCheckboxError(false);
+
+    if (!isGift && !sendToMyself) {
+      setCheckboxError(true);
+      valid = false;
+    }
+
+    const hasLetter = /[a-zA-Z]/.test(address);
+    const hasNumber = /\d/.test(address);
+    if (!address.trim() || !(hasLetter && hasNumber)) {
+      newErrors.address = "Address must contain both letters and numbers";
+      valid = false;
+    }
+
+    if (!/^\d{10}$/.test(phoneNumber)) {
+      newErrors.phoneNumber = "Phone number must be exactly 10 digits";
+      valid = false;
+    }
+
+    if (!paymentMethod) {
+      newErrors.paymentMethod = "Please select a payment method";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!address || !phoneNumber) {
-      alert("Please fill in all delivery details.");
-      return;
-    }
+    if (!validateInputs()) return;
 
     if (!user || !user._id) {
       alert("User not logged in properly!");
@@ -79,7 +127,7 @@ const Payment = () => {
     if (paymentMethod === "CashOnDelivery") {
       savePaymentDetails(
         {
-          customer: user?._id,
+          customer: user._id,
           address,
           phone_number: phoneNumber,
           payment_amount: total,
@@ -87,14 +135,9 @@ const Payment = () => {
         },
         {
           onSuccess: async (responseData) => {
-            console.log(
-              "Order placed successfully! Payment Response:",
-              responseData
-            );
-
             try {
               await saveOrderDetails({
-                customer: user?._id,
+                customer: user._id,
                 payment: responseData.data._id,
                 cart_items: cartItems.map((item) => ({
                   meal_id: item.meal,
@@ -105,7 +148,7 @@ const Payment = () => {
                 })),
                 order_received_date: new Date(),
               });
-              alert("Order placed successfully! Cash on Delivery selected.");
+              alert("Order placed successfully!");
               navigate(ROUTES.ORDER);
             } catch (orderError) {
               console.error("Error saving order:", orderError);
@@ -121,7 +164,7 @@ const Payment = () => {
     } else if (paymentMethod === "CardPayment") {
       navigate(ROUTES.CARDPAYMENT, {
         state: {
-          customer: user?._id,
+          customer: user._id,
           address,
           phone_number: phoneNumber,
           payment_amount: total,
@@ -138,7 +181,6 @@ const Payment = () => {
       style={{ backgroundImage: `url(${paymentBg})` }}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-green-900/60 to-black/60 backdrop-blur-sm z-0" />
-
       <div className="relative z-10 bg-white/90 backdrop-blur-xl shadow-2xl rounded-3xl p-10 max-w-2xl w-full">
         <button
           onClick={() => navigate(ROUTES.CART)}
@@ -156,7 +198,12 @@ const Payment = () => {
             <input
               type="checkbox"
               checked={isGift}
-              onChange={() => setIsGift(!isGift)}
+              onChange={() => {
+                const newIsGift = !isGift;
+                setIsGift(newIsGift);
+                if (newIsGift) setSendToMyself(false);
+                setCheckboxError(false);
+              }}
               disabled={sendToMyself}
             />
             Send as a Gift
@@ -165,42 +212,78 @@ const Payment = () => {
             <input
               type="checkbox"
               checked={sendToMyself}
-              onChange={() => setSendToMyself(!sendToMyself)}
+              onChange={() => {
+                const newSendToMyself = !sendToMyself;
+                setSendToMyself(newSendToMyself);
+                if (newSendToMyself) setIsGift(false);
+                setCheckboxError(false);
+              }}
               disabled={isGift}
             />
             Send to Myself
           </label>
         </div>
+        {checkboxError && (
+          <p className="text-sm text-red-600 mb-3">
+            Please select either "Send as a Gift" or "Send to Myself"
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-green-700 mb-2">
+            <h2 className="text-xl font-semibold text-green-700 mb-6">
               Delivery Information
             </h2>
-            <textarea
+            <label className="block text-sm font-medium text-green-700 mb-1">
+              Recipient Name & Address <span className="text-red-500">*</span>
+            </label>
+            <p className="text-sm text-gray-600 mb-1 font-semibold">
+              Example: Dulen, 123 Main St, Colombo
+            </p>
+            <input
+              type="text"
+              disabled={!isGift && !sendToMyself}
               className="w-full p-3 border border-green-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder=" Enter Receiver's Name...
-                            Enter Delivery Address..."
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                setErrors((prev) => ({ ...prev, address: "" }));
+              }}
               required
             />
+            {errors.address && (
+              <p className="text-sm text-red-600 mt-1">{errors.address}</p>
+            )}
           </div>
-
           <div>
+            <label className="block text-sm font-medium text-green-700 mb-1">
+              Contact Number <span className="text-red-500">*</span>
+            </label>
+            <p className="text-sm text-gray-600 mb-1 font-semibold">
+              Example: 0771234567
+            </p>
             <input
               type="tel"
+              disabled={!isGift && !sendToMyself}
               className="w-full p-3 border border-green-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder=" Enter phone number..."
               value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (/^\d{0,10}$/.test(value)) {
+                  setPhoneNumber(value);
+                  setErrors((prev) => ({ ...prev, phoneNumber: "" }));
+                }
+              }}
               required
             />
+            {errors.phoneNumber && (
+              <p className="text-sm text-red-600 mt-1">{errors.phoneNumber}</p>
+            )}
           </div>
 
           <div>
             <h2 className="text-xl font-semibold text-green-700 mb-2">
-              Payment Method
+              Payment Method <span className="text-red-500">*</span>
             </h2>
             <div className="flex flex-col gap-2">
               <label className="flex items-center gap-3 text-green-900">
@@ -208,7 +291,10 @@ const Payment = () => {
                   type="radio"
                   value="CashOnDelivery"
                   checked={paymentMethod === "CashOnDelivery"}
-                  onChange={() => setPaymentMethod("CashOnDelivery")}
+                  onChange={(e) => {
+                    setPaymentMethod(e.target.value);
+                    setErrors((prev) => ({ ...prev, paymentMethod: "" }));
+                  }}
                 />
                 Cash on Delivery
               </label>
@@ -217,10 +303,18 @@ const Payment = () => {
                   type="radio"
                   value="CardPayment"
                   checked={paymentMethod === "CardPayment"}
-                  onChange={() => setPaymentMethod("CardPayment")}
+                  onChange={(e) => {
+                    setPaymentMethod(e.target.value);
+                    setErrors((prev) => ({ ...prev, paymentMethod: "" }));
+                  }}
                 />
                 Card Payment
               </label>
+              {errors.paymentMethod && (
+                <p className="text-sm text-red-600 mt-1">
+                  {errors.paymentMethod}
+                </p>
+              )}
             </div>
           </div>
 
