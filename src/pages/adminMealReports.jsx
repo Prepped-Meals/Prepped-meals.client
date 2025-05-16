@@ -14,6 +14,15 @@ const AdminMealReports = () => {
     const [lowStockLastUpdated, setLowStockLastUpdated] = useState(null);
     const [movingMealsLastUpdated, setMovingMealsLastUpdated] = useState(null);
 
+    // NEW: Date range state for fast/slow moving meals filter
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+
+    // NEW: Stock filter mode state ('low' or 'lowest')
+    const [stockFilterMode, setStockFilterMode] = useState('low');
+
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
     const fetchLowStockMeals = async () => {
         try {
             const response = await axios.get('/api/mealReports/low-stock');
@@ -25,9 +34,15 @@ const AdminMealReports = () => {
         }
     };
 
+    // UPDATED: Use startDate and endDate to fetch filtered moving meals
     const fetchMovingMeals = async () => {
+        if (!startDate || !endDate) {
+            alert("Please select both start and end dates.");
+            return;
+        }
+
         try {
-            const response = await axios.get('/api/mealReports/moving-meals');
+            const response = await axios.get(`/api/mealReports/moving-meals-by-date?startDate=${startDate}&endDate=${endDate}`);
             setFastMovingMeals(response.data.fastMovingMeals);
             setSlowMovingMeals(response.data.slowMovingMeals);
             setShowFastSlow(true);
@@ -50,13 +65,19 @@ const AdminMealReports = () => {
         }
     };
 
+    // UPDATED: Use startDate and endDate to download filtered fast/slow moving meals report PDF
     const handleDownloadFastSlowMovingReport = async () => {
+        if (!startDate || !endDate) {
+            alert('Please select both start and end dates.');
+            return;
+        }
+
         try {
-            const res = await fetch('/api/mealReports/moving-meals-pdf', { method: 'GET' });
+            const res = await fetch(`/api/mealReports/moving-meals-pdf?startDate=${startDate}&endDate=${endDate}`);
             const blob = await res.blob();
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'moving-meals-report.pdf';
+            link.download = `moving-meals-report-${startDate}-to-${endDate}.pdf`;
             link.click();
         } catch (error) {
             console.error('Error downloading fast/slow moving report PDF:', error);
@@ -81,7 +102,44 @@ const AdminMealReports = () => {
         return Object.values(mealsMap);
     };
 
-    const lowestStockValue = Math.min(...lowStockMeals.map(m => m.meal_stock));
+    // New handlers with validation for today and no equal start/end dates
+    const handleStartDateChange = (e) => {
+        const newStartDate = e.target.value;
+
+        if (newStartDate > today) {
+            alert('Start date cannot be after today.');
+            return;
+        }
+
+        if (endDate && (newStartDate >= endDate)) {
+            alert('Start date must be before end date.');
+            return;
+        }
+
+        setStartDate(newStartDate);
+    };
+
+    const handleEndDateChange = (e) => {
+        const newEndDate = e.target.value;
+
+        if (newEndDate > today) {
+            alert('End date cannot be after today.');
+            return;
+        }
+
+        if (startDate && (newEndDate <= startDate)) {
+            alert('End date must be after start date.');
+            return;
+        }
+
+        setEndDate(newEndDate);
+    };
+
+    // Filter low stock meals according to selected filter mode
+    const filteredLowStockMeals = lowStockMeals.filter(meal => {
+        if (stockFilterMode === 'lowest') return meal.meal_stock < 4;
+        return true; // 'low' mode shows all low stock meals (assuming <10 on backend)
+    });
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -95,7 +153,8 @@ const AdminMealReports = () => {
                         Meal Reports
                     </h1>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Changed container here to stack reports vertically */}
+                    <div className="flex flex-col gap-8">
                         {/* Low Stock Report */}
                         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition duration-300">
                             <h2 className="text-xl font-semibold text-gray-700 mb-4">Low Stock Report</h2>
@@ -112,6 +171,19 @@ const AdminMealReports = () => {
 
                             {showLowStock && (
                                 <>
+                                    {/* Dropdown for filtering mode */}
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <label className="text-gray-700 font-medium">Filter:</label>
+                                        <select
+                                            value={stockFilterMode}
+                                            onChange={(e) => setStockFilterMode(e.target.value)}
+                                            className="border rounded px-2 py-1"
+                                        >
+                                            <option value="low">Low Stock (&lt; 10)</option>
+                                            <option value="lowest">Lowest Stock (&lt; 4)</option>
+                                        </select>
+                                    </div>
+
                                     <div className="overflow-x-auto transition-all duration-300">
                                         <table className="min-w-full text-sm text-gray-700 border-collapse rounded-lg overflow-hidden">
                                             <thead>
@@ -122,7 +194,7 @@ const AdminMealReports = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {lowStockMeals.map(meal => (
+                                                {filteredLowStockMeals.map(meal => (
                                                     <tr key={meal.meal_id} className="hover:bg-gray-50">
                                                         <td className="px-6 py-3 border-t">{meal.meal_id}</td>
                                                         <td className="px-6 py-3 border-t">{meal.meal_name}</td>
@@ -134,10 +206,10 @@ const AdminMealReports = () => {
                                     </div>
 
                                     {/* Chart for Low Stock */}
-                                    {lowStockMeals.length > 0 && (
+                                    {filteredLowStockMeals.length > 0 && (
                                         <div className="mt-6" style={{ width: '100%', height: 300 }}>
                                             <ResponsiveContainer>
-                                                <BarChart data={lowStockMeals}>
+                                                <BarChart data={filteredLowStockMeals}>
                                                     <CartesianGrid strokeDasharray="3 3" />
                                                     <XAxis dataKey="meal_name" />
                                                     <YAxis />
@@ -146,11 +218,9 @@ const AdminMealReports = () => {
                                                     <Bar
                                                         dataKey="meal_stock"
                                                         name="Meal Stock"
-                                                        fill="#8884d8"
                                                         isAnimationActive={false}
-                                                        shape={(props) => {
-                                                            const { x, y, width, height, payload } = props;
-                                                            const isLowest = payload.meal_stock === lowestStockValue;
+                                                        shape={({ x, y, width, height, payload }) => {
+                                                            const isLowStock = payload.meal_stock < 4;
                                                             return (
                                                                 <g>
                                                                     <rect
@@ -158,9 +228,9 @@ const AdminMealReports = () => {
                                                                         y={y}
                                                                         width={width}
                                                                         height={height}
-                                                                        fill={isLowest ? '#f87171' : '#8884d8'}
+                                                                        fill={isLowStock ? '#f87171' : '#8884d8'}
                                                                     />
-                                                                    {isLowest && (
+                                                                    {isLowStock && (
                                                                         <text
                                                                             x={x + width / 2}
                                                                             y={y - 10}
@@ -169,7 +239,7 @@ const AdminMealReports = () => {
                                                                             fontSize={12}
                                                                             fontWeight="bold"
                                                                         >
-                                                                            Lowest Stock
+                                                                            Low Stock
                                                                         </text>
                                                                     )}
                                                                 </g>
@@ -187,7 +257,26 @@ const AdminMealReports = () => {
                         {/* Fast/Slow Moving Report */}
                         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition duration-300">
                             <h2 className="text-xl font-semibold text-gray-700 mb-4">Fast/Slow Moving Report</h2>
-                            <div className="flex gap-4 mb-2">
+
+                            {/* NEW: Date range inputs */}
+                            <div className="flex gap-4 mb-4 items-center">
+                                <label className="text-gray-700 font-medium">Start Date:</label>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={handleStartDateChange}
+                                    max={endDate || today}
+                                    className="border rounded px-2 py-1"
+                                />
+                                <label className="text-gray-700 font-medium">End Date:</label>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={handleEndDateChange}
+                                    min={startDate}
+                                    max={today}
+                                    className="border rounded px-2 py-1"
+                                />
                                 <Button onClick={fetchMovingMeals} className="bg-green-700 hover:bg-green-800 text-white text-sm px-5 py-2 rounded-full shadow-sm transition">View Report</Button>
                                 <Button onClick={handleDownloadFastSlowMovingReport} className="bg-blue-700 hover:bg-blue-800 text-white text-sm px-5 py-2 rounded-full shadow-sm transition">Download PDF</Button>
                             </div>
@@ -200,38 +289,30 @@ const AdminMealReports = () => {
 
                             {showFastSlow && (
                                 <>
-                                    <div className="overflow-x-auto transition-all duration-300">
+                                    <div className="overflow-x-auto">
                                         <table className="min-w-full text-sm text-gray-700 border-collapse rounded-lg overflow-hidden">
                                             <thead>
                                                 <tr className="bg-gray-200">
-                                                    <th className="px-6 py-3 text-left">Meal ID</th>
                                                     <th className="px-6 py-3 text-left">Meal Name</th>
-                                                    <th className="px-6 py-3 text-left">Total Sold</th>
-                                                    <th className="px-6 py-3 text-left">Status</th>
+                                                    <th className="px-6 py-3 text-left">Fast Moving (Total Sold)</th>
+                                                    <th className="px-6 py-3 text-left">Slow Moving (Total Sold)</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {[...fastMovingMeals, ...slowMovingMeals].map(meal => (
-                                                    <tr key={meal.meal_id} className="hover:bg-gray-50">
-                                                        <td className="px-6 py-3 border-t">{meal.meal_id}</td>
+                                                {combinedMovingMeals().map(meal => (
+                                                    <tr key={meal.meal_name} className="hover:bg-gray-50">
                                                         <td className="px-6 py-3 border-t">{meal.meal_name}</td>
-                                                        <td className="px-6 py-3 border-t">{meal.total_sold}</td>
-                                                        <td className="px-6 py-3 border-t">
-                                                            {meal.total_sold > 10 ? (
-                                                                <span className="text-green-600 font-semibold">Fast-Moving</span>
-                                                            ) : (
-                                                                <span className="text-red-500 font-semibold">Slow-Moving</span>
-                                                            )}
-                                                        </td>
+                                                        <td className="px-6 py-3 border-t">{meal.fast}</td>
+                                                        <td className="px-6 py-3 border-t">{meal.slow}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
                                     </div>
 
-                                    {/* Chart for Fast/Slow Moving */}
-                                    {combinedMovingMeals().length > 0 && (
-                                        <div className="mt-6" style={{ width: '100%', height: 350 }}>
+                                    {/* Chart for Fast/Slow Moving Meals */}
+                                    {fastMovingMeals.length + slowMovingMeals.length > 0 && (
+                                        <div className="mt-6" style={{ width: '100%', height: 300 }}>
                                             <ResponsiveContainer>
                                                 <BarChart data={combinedMovingMeals()}>
                                                     <CartesianGrid strokeDasharray="3 3" />
@@ -239,8 +320,8 @@ const AdminMealReports = () => {
                                                     <YAxis />
                                                     <Tooltip />
                                                     <Legend />
-                                                    <Bar dataKey="fast" fill="#4CAF50" name="Fast-Moving Meals" />
-                                                    <Bar dataKey="slow" fill="#F44336" name="Slow-Moving Meals" />
+                                                    <Bar dataKey="fast" name="Fast Moving" fill="#60a5fa" />
+                                                    <Bar dataKey="slow" name="Slow Moving" fill="#f87171" />
                                                 </BarChart>
                                             </ResponsiveContainer>
                                         </div>
