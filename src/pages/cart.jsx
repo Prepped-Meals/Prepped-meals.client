@@ -38,6 +38,7 @@ const Cart = () => {
           );
 
           // Fetch meal details to get stock levels
+          // eslint-disable-next-line
           const mealIds = cartItemsFromBackend.map(item => item.meal);
           const mealResponse = await axios.get(
             "http://localhost:8000/api/get-meals/get"
@@ -152,38 +153,48 @@ const Cart = () => {
     const existingCart = [...cartItems];
     const existingIndex = existingCart.findIndex((i) => i.meal === item.meal);
 
-    if (existingIndex !== -1 && existingCart[existingIndex].quantity > 1) {
-      existingCart[existingIndex].quantity -= 1;
-      existingCart[existingIndex].total_price =
-        existingCart[existingIndex].meal_price * existingCart[existingIndex].quantity;
+    if (existingIndex !== -1) {
+      const currentQuantity = existingCart[existingIndex].quantity;
+      if (currentQuantity > 1) {
+        existingCart[existingIndex].quantity -= 1;
+        existingCart[existingIndex].total_price =
+          existingCart[existingIndex].meal_price * existingCart[existingIndex].quantity;
 
-      setCartItems(existingCart);
-      localStorage.setItem("cart", JSON.stringify(existingCart));
+        setCartItems(existingCart);
+        localStorage.setItem("cart", JSON.stringify(existingCart));
 
-      setCartQuantities((prev) => ({
-        ...prev,
-        [item.meal]: prev[item.meal] - 1,
-      }));
+        setCartQuantities((prev) => ({
+          ...prev,
+          [item.meal]: prev[item.meal] - 1,
+        }));
 
-      saveCart(
-        {
-          customer: user._id,
-          meal: item.meal,
-          meal_name: item.meal_name,
-          meal_price: item.meal_price,
-          action: "decrease",
-        },
-        {
-          onError: (error) => {
-            console.error("Failed to save cart (decrease):", error);
-            setAlertMessage(`Failed to update ${item.meal_name} quantity.`);
-            fetchCart(user._id);
+        saveCart(
+          {
+            customer: user._id,
+            meal: item.meal,
+            meal_name: item.meal_name,
+            meal_price: item.meal_price,
+            action: "decrease",
           },
-        }
-      );
+          {
+            onSuccess: () => {
+              console.log(`Successfully decreased quantity for ${item.meal_name}`);
+            },
+            onError: (error) => {
+              console.error("Failed to save cart (decrease):", error);
+              setAlertMessage(`Failed to update ${item.meal_name} quantity.`);
+              fetchCart(user._id);
+            },
+          }
+        );
+      } else {
+        // Quantity is 1, do nothing (button should be disabled)
+        console.log(`Cannot decrease ${item.meal_name} below 1. Use the delete button to remove.`);
+        //setAlertMessage(`Cannot decrease ${item.meal_name} below 1. Use the delete button to remove.`);
+      }
     } else {
-      // Directly remove the item if quantity is 1
-      handleRemove(item.meal);
+      console.warn(`Meal ${item.meal} not found in cart`);
+      setAlertMessage(`Meal ${item.meal_name} not found in cart.`);
     }
   };
 
