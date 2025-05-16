@@ -4,7 +4,7 @@ import signupImage from "../assets/images/foodbg.jpg";
 import Button from "../components/button.js";
 import { useSaveCusDetails } from "../hooks/useSaveCusDetails";
 import { ROUTES } from "../routes/paths";
-import { FiUser, FiMail, FiPhone, FiLock, FiCheck } from "react-icons/fi";
+import { FiUser, FiMail, FiPhone, FiLock, FiCheck, FiEye, FiEyeOff } from "react-icons/fi";
 
 function SignUp() {
   const [formData, setFormData] = useState({
@@ -17,7 +17,10 @@ function SignUp() {
     confirmPassword: ''
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showSuccess, setShowSuccess] = useState(false);
   const navigate = useNavigate();
   const saveCustomerMutation = useSaveCusDetails();
 
@@ -25,9 +28,12 @@ function SignUp() {
   const validatePhone = (phone) => /^\d{10}$/.test(phone);
   const validatePassword = (password) => password.length >= 6;
 
+
+  //validations
   const validateField = (name, value) => {
     let error = '';
 
+    //First and Last name validation
     if (name === 'f_name' || name === 'l_name') {
       if (!value.trim()) {
         error = `${name === 'f_name' ? 'First' : 'Last'} name is required`;
@@ -36,26 +42,31 @@ function SignUp() {
       }
     }
 
+    //Email validation
     if (name === 'email') {
       if (!value.trim()) error = 'Email is required';
       else if (!validateEmail(value)) error = 'Invalid email address';
     }
 
+    //Phone number validation
     if (name === 'contact_no') {
       if (!value.trim()) error = 'Phone number is required';
       else if (!validatePhone(value)) error = 'Phone number must be 10 digits';
     }
 
+    //Username validation
     if (name === 'username') {
       if (!value.trim()) error = 'Username is required';
       else if (value.length < 4) error = 'Username must be at least 4 characters';
     }
 
+    //Password validation
     if (name === 'password') {
       if (!value) error = 'Password is required';
       else if (!validatePassword(value)) error = 'Password must be at least 6 characters';
     }
 
+    //Confirm password validation
     if (name === 'confirmPassword') {
       if (!value) error = 'Confirm password is required';
       else if (value !== formData.password) error = 'Passwords do not match';
@@ -64,6 +75,7 @@ function SignUp() {
     return error;
   };
 
+  // Handle input changes and validations
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -81,6 +93,7 @@ function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate all fields
     const validationErrors = {};
     Object.entries(formData).forEach(([name, value]) => {
       const error = validateField(name, value);
@@ -91,7 +104,7 @@ function SignUp() {
 
     try {
       await saveCustomerMutation.mutateAsync(formData);
-      alert("Signup successful! Please log in to continue");
+      setShowSuccess(true);
 
       setFormData({
         f_name: '',
@@ -103,7 +116,6 @@ function SignUp() {
         confirmPassword: ''
       });
       setErrors({});
-      navigate(ROUTES.SIGN_IN);
     } catch (error) {
       console.error('Error:', error);
       alert("An error occurred. Please try again.");
@@ -115,6 +127,24 @@ function SignUp() {
       className="min-h-screen bg-cover bg-center flex justify-end items-center px-4"
       style={{ backgroundImage: `url(${signupImage})` }}
     >
+      {/* Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-4 shadow-xl w-72 text-center">
+            <h2 className="text-lg font-semibold text-green-700 mb-4">Signup successful!</h2>
+            <button
+              onClick={() => {
+                setShowSuccess(false);
+                navigate(ROUTES.SIGN_IN);
+              }}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-xl  bg-white bg-opacity-30 backdrop-blur-lg rounded-2xl shadow-lg p-8 md:p-12 border border-white/30 mr-4 md:mr-12">
         <div className="text-center mb-8">
           <div className="mx-auto flex items-center justify-center bg-green-100 w-16 h-16 rounded-full mb-4">
@@ -209,7 +239,7 @@ function SignUp() {
                 value={formData.contact_no}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                placeholder="1234567890"
+                placeholder="0XXXXXXXXXX"
               />
             </div>
             {errors.contact_no && (
@@ -246,14 +276,25 @@ function SignUp() {
                   <FiLock className="text-gray-400" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
-                  className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-transparent"
+                  className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-transparent"
                   value={formData.password}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <FiEyeOff className="text-gray-400 hover:text-gray-600" />
+                  ) : (
+                    <FiEye className="text-gray-400 hover:text-gray-600" />
+                  )}
+                </button>
               </div>
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1">{errors.password}</p>
@@ -267,14 +308,25 @@ function SignUp() {
                   <FiLock className="text-gray-400" />
                 </div>
                 <input
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
-                  className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-transparent"
+                  className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-transparent"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <FiEyeOff className="text-gray-400 hover:text-gray-600" />
+                  ) : (
+                    <FiEye className="text-gray-400 hover:text-gray-600" />
+                  )}
+                </button>
               </div>
               {errors.confirmPassword && (
                 <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>

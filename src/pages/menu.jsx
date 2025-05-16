@@ -13,10 +13,15 @@ const Menu = () => {
   const { user } = useAuth();
 
   const [meals, setMeals] = useState([]);
+  const [filteredMeals, setFilteredMeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cartQuantities, setCartQuantities] = useState({});
   const [alertMessage, setAlertMessage] = useState("");
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showNumberPopup, setShowNumberPopup] = useState(false);
+  const [calorieRange, setCalorieRange] = useState("all");
 
   // eslint-disable-next-line
   const { mutate: saveCart, isLoading: savingCart } = useSaveCart();
@@ -33,6 +38,7 @@ const Menu = () => {
           Array.isArray(response.data.meals)
         ) {
           setMeals(response.data.meals);
+          setFilteredMeals(response.data.meals);
         } else {
           setError("Unexpected data format from the server.");
           console.error("Unexpected data format:", response.data);
@@ -47,7 +53,6 @@ const Menu = () => {
 
     fetchMeals();
 
-    // Load quantities from localStorage on initial load
     const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
     const quantities = {};
     existingCart.forEach((item) => {
@@ -56,7 +61,52 @@ const Menu = () => {
     setCartQuantities(quantities);
   }, []);
 
+  // Filter meals based on meal name and calorie range
+  useEffect(() => {
+    let filtered = meals;
+
+    // Filter by search term
+    if (searchTerm.trim() !== "") {
+      filtered = filtered.filter((meal) =>
+        meal.meal_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by calorie range
+    if (calorieRange !== "all") {
+      const [min, max] = calorieRange.split("-").map(Number);
+      filtered = filtered.filter((meal) => {
+        if (max) {
+          return meal.calorie_count >= min && meal.calorie_count <= max;
+        }
+        return meal.calorie_count >= min;
+      });
+    }
+
+    setFilteredMeals(filtered);
+  }, [searchTerm, calorieRange, meals]);
+
+  // Handle search input change with number restriction
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    if (/[0-9]/.test(value)) {
+      setShowNumberPopup(true);
+      return;
+    }
+    setSearchTerm(value);
+  };
+
+  // Handle calorie range change
+  const handleCalorieRangeChange = (e) => {
+    setCalorieRange(e.target.value);
+  };
+
   const handleAddToCart = (meal, action) => {
+    if (!user) {
+      setShowLoginPopup(true);
+      return;
+    }
+
     if (action === "increase" && meal.meal_stock <= 0) {
       setAlertMessage(`Sorry, ${meal.meal_name} is out of stock.`);
       return;
@@ -99,7 +149,6 @@ const Menu = () => {
         total_price: meal.meal_price,
       });
     } else {
-      // Cannot decrease a non-existing item
       return;
     }
 
@@ -133,6 +182,69 @@ const Menu = () => {
     >
       <h1 className="text-4xl font-extrabold text-black mb-8">Menu Page</h1>
 
+      {/* Search Bar and Calorie Filter */}
+      <div className="mb-8 w-full max-w-3xl px-4 flex flex-row gap-4">
+        {/* Search Bar */}
+        <div className="relative flex-1">
+          <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 21l-4.35-4.35m0 0a7 7 0 10-9.9-9.9 7 7 0 009.9 9.9z"
+              />
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Search by meal name..."
+            className="w-full py-3 pl-10 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Calorie Range Dropdown */}
+        <select
+          value={calorieRange}
+          onChange={handleCalorieRangeChange}
+          className="w-48 py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        >
+          <option value="all">All Calories</option>
+          <option value="0-200">0 - 200 kcal</option>
+          <option value="201-400">201 - 400 kcal</option>
+          <option value="401-600">401 - 600 kcal</option>
+          <option value="601-800">601 - 800 kcal</option>
+          <option value="801">Above 800 kcal</option>
+        </select>
+      </div>
+
       {/* Alert Popup for Stock Issues */}
       {alertMessage && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
@@ -148,15 +260,74 @@ const Menu = () => {
         </div>
       )}
 
+      {/* Login Required Popup */}
+      {showLoginPopup && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-80 text-center">
+            <p className="text-red-500 font-semibold mb-4">
+              You must log in to add items to the cart.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => navigate(ROUTES.SIGN_IN)}
+                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => setShowLoginPopup(false)}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Number Not Allowed Popup */}
+      {showNumberPopup && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-80 text-center">
+            <p className="text-red-500 font-semibold mb-4">
+              Numbers are not allowed in the search.
+            </p>
+            <button
+              onClick={() => setShowNumberPopup(false)}
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <p className="text-lg text-white">Loading meals...</p>
       ) : error ? (
         <p className="text-red-300">{error}</p>
-      ) : meals.length === 0 ? (
-        <p className="text-lg text-white">No meals available at the moment.</p>
+      ) : filteredMeals.length === 0 ? (
+        <div className="text-center">
+          <p className="text-lg text-white">
+            {searchTerm || calorieRange !== "all"
+              ? `No meals found matching your criteria`
+              : "No meals available at the moment."}
+          </p>
+          {(searchTerm || calorieRange !== "all") && (
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setCalorieRange("all");
+              }}
+              className="mt-4 text-white underline hover:text-green-200"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {meals.map((meal) => {
+          {filteredMeals.map((meal) => {
             const isAdded = !!cartQuantities[meal._id];
             return (
               <div
@@ -165,7 +336,6 @@ const Menu = () => {
                   isAdded ? "bg-green-100 border-2 border-green-400" : ""
                 }`}
               >
-                {/* Added to Cart Badge */}
                 {isAdded && (
                   <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
                     Added to Cart
@@ -178,9 +348,7 @@ const Menu = () => {
                   className="w-full h-48 object-cover rounded-md mb-4"
                 />
 
-                <h2 className="text-2xl font-semibold mb-2">
-                  {meal.meal_name}
-                </h2>
+                <h2 className="text-2xl font-semibold mb-2">{meal.meal_name}</h2>
                 <p className="text-gray-700 mb-2">{meal.meal_description}</p>
                 <p className="text-sm text-gray-500 mb-1">
                   Calories: {meal.calorie_count}

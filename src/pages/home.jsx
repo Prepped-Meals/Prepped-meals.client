@@ -8,25 +8,25 @@ import balancedPowerBowl from "../assets/images/P.Bowl_Dulen.jpg";
 // Sample Testimonial Data
 const testimonials = [
   {
-    name: "Sarah D.",
-    rating: 5,
-    feedback: "These meals saved my week! Delicious, healthy, and super easy.",
+    name: "Selena Gomez",
+    rating: 4,
+    feedback: "Frozen butter chicken was yummy! But should've been a bit more spicy",
     image: "https://randomuser.me/api/portraits/women/44.jpg",
   },
   {
-    name: "Jason M.",
+    name: "Milsara Rathnayaka",
     rating: 4,
     feedback: "I love the variety and quality. Perfect for my fitness goals.",
     image: "https://randomuser.me/api/portraits/men/32.jpg",
   },
   {
-    name: "Emily R.",
+    name: "Alexa Rawles",
     rating: 5,
     feedback: "It feels like a restaurant at home! So convenient and tasty!",
     image: "https://randomuser.me/api/portraits/women/68.jpg",
   },
   {
-    name: "Mark T.",
+    name: "Madusha Silva",
     rating: 4,
     feedback: "Great meals for busy days. I can’t recommend them enough!",
     image: "https://randomuser.me/api/portraits/men/75.jpg",

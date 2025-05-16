@@ -18,6 +18,7 @@ const ResetPassword = () => {
 
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const toggleVisibility = (field) => {
     setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }));
@@ -79,6 +80,11 @@ const ResetPassword = () => {
         confirmPassword: "",
       });
       setErrors({});
+      
+      // Show success modal only if the message contains "success"
+      if (res.data.message.toLowerCase().includes("success")) {
+        setShowSuccessModal(true);
+      }
     } catch (error) {
       const err = error.response?.data?.error || "Something went wrong";
       setMessage(err);
@@ -103,7 +109,7 @@ const ResetPassword = () => {
 
         {/* Form Container */}
         <div className="p-8">
-          {message && (
+          {message && !message.toLowerCase().includes("success") && (
             <div
               className={`flex items-center justify-center p-3 mb-6 rounded-lg ${
                 message.includes("success")
@@ -193,6 +199,21 @@ const ResetPassword = () => {
           </div>
         </div>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-4 w-72 text-center">
+            <h2 className="text-lg font-semibold mb-4 text-green-700">Password updated successfully!</h2>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

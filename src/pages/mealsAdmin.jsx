@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate , Link} from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Button from "../components/button";
 import { ROUTES } from '../routes/paths';
 import SidebarAdmin from '../components/sidebarAdmin';
@@ -8,20 +8,20 @@ import HeaderAdmin from '../components/headerAdmin';
 import MealPopup from '../components/mealpopup';
 import UpdateMealPopup from '../components/updateMealpop';
 
-
-
 const MealsAdmin = () => {
     const aNavigate = useNavigate();
     const { data: meals, isError, isLoading } = useFetchMeals();
+
+    const [selectedMeal, setSelectedMeal] = React.useState(null);
+    const [showPopup, setShowPopup] = React.useState(false);
+    const [showUpdatePopup, setShowUpdatePopup] = React.useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+    const [showDeleteSuccess, setShowDeleteSuccess] = React.useState(false);
 
     const handleAddMealClick = () => {
         console.log("Add meals button clicked");
         aNavigate(ROUTES.ADD_MEALS);
     };
-
-    const [selectedMeal, setSelectedMeal] = React.useState(null);
-    const [showPopup, setShowPopup] = React.useState(false);
-    const [showUpdatePopup, setShowUpdatePopup] = React.useState(false);
 
     const handleMealCardClick = (meal) => {
         setSelectedMeal(meal);
@@ -34,10 +34,6 @@ const MealsAdmin = () => {
     };
 
     const handleUpdateMeal = (mealId, formData) => {
-        // Example: Use a function to update the meal in your database
-        console.log("Updating meal with ID:", mealId);
-
-        // Example of what an API call might look like:
         fetch(`/api/meals/${mealId}`, {
             method: 'PUT',
             body: formData,
@@ -45,79 +41,64 @@ const MealsAdmin = () => {
         .then(response => response.json())
         .then(data => {
             console.log("Meal updated:", data);
-            // You can refresh the meal list here or close the popup
-            setShowUpdatePopup(false); // Close the update popup
-            // Optionally, you can refetch the meal list after update
-            // setMeals(updatedMeals); or use another method to refetch meals.
+            setShowUpdatePopup(false);
         })
         .catch(error => {
             console.error("Error updating meal:", error);
         });
     };
 
-    if (isLoading) {
-        return <p>Loading meals...</p>;
-    }
-
-    if (isError) {
-        return <p>Error fetching meals</p>;
-    }
-
-
-    //for deleting meals
-    const handleDeleteMeal = async (mealId) => {
-        const confirmed = window.confirm("Are you sure you want to delete this meal?");
-        if (!confirmed) return;
-    
+    const handleDeleteMeal = async () => {
         try {
-            await fetch(`/api/create-meals/${mealId}`, {
+            await fetch(`/api/create-meals/${selectedMeal.meal_id}`, {
                 method: 'DELETE',
             });
-    
-            alert("Meal deleted successfully!");
-            setShowPopup(false); // close the popup
+            setShowDeleteConfirm(false);
+            setShowPopup(false);
             setSelectedMeal(null);
-            window.location.reload(); // reload page to reflect changes
+            setShowDeleteSuccess(true);
         } catch (error) {
             console.error("Error deleting meal:", error);
             alert("Failed to delete meal.");
         }
     };
-    
+
+    if (isLoading) return <p>Loading meals...</p>;
+    if (isError) return <p>Error fetching meals</p>;
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-            {/* Sidebar */}
             <SidebarAdmin />
-
-            {/* Main Content Area */}
             <div className="flex-1 flex flex-col">
-                {/* Header */}
                 <HeaderAdmin />
-
-                {/* Page Content */}
                 <div className="p-6 flex-1">
-                    {/* Page Header */}
                     <h1 className="text-2xl font-bold mb-4 mt-2" style={{ fontFamily: 'Poppins, sans-serif' }}>MEALS</h1>
 
-                    {/* Add Meals Section */}
-                    <div className="bg-yellow-100 p-4 rounded-lg shadow-md" style={{ minHeight: '80vh' }}>
+                    <div className="bg-gray-200 p-4 rounded-lg shadow-md" style={{ minHeight: '80vh' }}>
                         <div className="flex gap-4 flex-wrap">
                             <Button onClick={handleAddMealClick} className="bg-green-700 text-white mt-4">Add Meals</Button>
-                            <Link to = {ROUTES.ADMIN_MEALREPORT}> 
-                            <Button className="bg-green-700 text-white mt-4">Reports</Button>
+                            <Link to={ROUTES.ADMIN_MEALREPORT}>
+                                <Button className="bg-green-700 text-white mt-4">Reports</Button>
                             </Link>
                         </div>
 
                         <h1 className="text-xl font-bold mb-4 mt-10">MEALS ADDED</h1>
 
-                        {/* Meal Cards */}
                         {meals && meals.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {meals.map((meal, index) => (
-                                    <div key={meal.meal_id || index} className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center"
+                                    <div
+                                        key={meal.meal_id || index}
+                                        className="relative bg-white rounded-xl shadow-md p-4 flex flex-col items-center"
                                         onClick={() => handleMealCardClick(meal)}
                                     >
+                                        {/* Low stock badge with left count */}
+                                        {meal.meal_stock !== undefined && meal.meal_stock < 10 && (
+                                            <div className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-md shadow">
+                                                Low Stock ({meal.meal_stock} left)
+                                            </div>
+                                        )}
+
                                         <img
                                             src={meal.meal_image || 'https://via.placeholder.com/150'}
                                             alt={meal.meal_name || 'Meal Image'}
@@ -144,7 +125,7 @@ const MealsAdmin = () => {
                             setShowPopup(false);
                             setShowUpdatePopup(true);
                         }}
-                        onDelete={() => handleDeleteMeal(selectedMeal.meal_id)}
+                        onDelete={() => setShowDeleteConfirm(true)}
                     />
                 )}
 
@@ -157,6 +138,47 @@ const MealsAdmin = () => {
                         }}
                         onSubmit={handleUpdateMeal}
                     />
+                )}
+
+                {/* Delete Confirmation Modal */}
+                {showDeleteConfirm && (
+                    <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+                        <div className="bg-white rounded-lg shadow-lg p-6 w-72 text-center">
+                            <h2 className="text-lg font-semibold mb-4 text-red-600">Are you sure you want to delete this meal?</h2>
+                            <div className="flex justify-center gap-4">
+                                <button
+                                    onClick={handleDeleteMeal}
+                                    className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                                >
+                                    Delete
+                                </button>
+                                <button
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    className="bg-gray-300 px-4 py-2 rounded-md hover:bg-gray-400"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Delete Success Modal */}
+                {showDeleteSuccess && (
+                    <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+                        <div className="bg-white rounded-lg shadow-lg p-4 w-72 text-center">
+                            <h2 className="text-lg font-semibold mb-4 text-green-700">Meal deleted successfully!</h2>
+                            <button
+                                onClick={() => {
+                                    setShowDeleteSuccess(false);
+                                    window.location.reload(); // optional: refresh after dismiss
+                                }}
+                                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>

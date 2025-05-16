@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import signupImage from "../assets/images/foodbg.jpg";
 import Button from "../components/button.js";
 import { useAuth } from "../context/authContext"; 
-import { FiLock, FiUser, FiArrowRight } from "react-icons/fi";
+import { FiLock, FiUser, FiArrowRight, FiEye, FiEyeOff } from "react-icons/fi";
 
 const SignIn = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth(); 
@@ -84,12 +85,23 @@ const SignIn = () => {
                 <FiLock className="text-gray-400" />
               </div>
               <input
-                type="password"
-                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-transparent bg-white/70"
+                type={showPassword ? "text" : "password"}
+                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-transparent bg-white/70"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
               />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <FiEyeOff className="text-gray-400 hover:text-gray-600" />
+                ) : (
+                  <FiEye className="text-gray-400 hover:text-gray-600" />
+                )}
+              </button>
             </div>
           </div>
 
