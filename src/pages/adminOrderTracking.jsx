@@ -6,7 +6,8 @@ import Header from "../components/headerAdmin";
 
 const AdminorderTracking = () => {
   const [orders, setOrders] = useState([]);
-  const [filterStatus, setFilterStatus] = useState("All"); // 🆕 Filter state
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -31,17 +32,13 @@ const AdminorderTracking = () => {
         order._id === orderId ? { ...order, order_status: newStatus } : order
       );
       setOrders(updatedOrders);
-
-      // Updated success message
-      alert("✅ Order status has been updated.");
+      setShowSuccess(true);
     } catch (error) {
       console.error("Error updating order status:", error);
-      // Updated error message
       alert("❌ Unable to update order status. Please try again.");
     }
   };
 
-  // 🆕 Filter orders based on selected status
   const filteredOrders =
     filterStatus === "All"
       ? orders
@@ -49,6 +46,23 @@ const AdminorderTracking = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
+      {/* Success Modal */}
+      {showSuccess && (
+        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-4 shadow-xl w-72 text-center">
+            <h2 className="text-lg font-semibold text-green-700 mb-4">
+              Order status updated successfully!
+            </h2>
+            <button
+              onClick={() => setShowSuccess(false)}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       <SidebarAdmin />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
@@ -57,7 +71,6 @@ const AdminorderTracking = () => {
             <div className="mb-8 flex justify-between items-center">
               <h1 className="text-2xl font-semibold text-gray-800">Order Tracking</h1>
 
-              {/* 🆕 Filter dropdown */}
               <div>
                 <label htmlFor="statusFilter" className="mr-2 text-sm font-medium text-gray-700">Filter:</label>
                 <select
