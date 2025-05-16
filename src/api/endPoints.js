@@ -23,4 +23,6 @@ export const END_POINTS = {
   GET_ORDER_STATUS_REPORT: "api/orders/generate-order-status-report",
   GET_PAYMENT_REPORT: "api/payments/weekly-report",
   UPDATE_ORDER_STATUS: (orderId) => `api/orders/update-status/${orderId}`,
+  GET_MOVING_MEALS_BY_DATE: (startDate, endDate) =>`api/mealReports/moving-meals-by-date?startDate=${startDate}&endDate=${endDate}`,
+
 };

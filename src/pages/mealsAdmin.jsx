@@ -74,7 +74,7 @@ const MealsAdmin = () => {
                 <div className="p-6 flex-1">
                     <h1 className="text-2xl font-bold mb-4 mt-2" style={{ fontFamily: 'Poppins, sans-serif' }}>MEALS</h1>
 
-                    <div className="bg-yellow-100 p-4 rounded-lg shadow-md" style={{ minHeight: '80vh' }}>
+                    <div className="bg-gray-200 p-4 rounded-lg shadow-md" style={{ minHeight: '80vh' }}>
                         <div className="flex gap-4 flex-wrap">
                             <Button onClick={handleAddMealClick} className="bg-green-700 text-white mt-4">Add Meals</Button>
                             <Link to={ROUTES.ADMIN_MEALREPORT}>
@@ -87,9 +87,18 @@ const MealsAdmin = () => {
                         {meals && meals.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {meals.map((meal, index) => (
-                                    <div key={meal.meal_id || index} className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center"
+                                    <div
+                                        key={meal.meal_id || index}
+                                        className="relative bg-white rounded-xl shadow-md p-4 flex flex-col items-center"
                                         onClick={() => handleMealCardClick(meal)}
                                     >
+                                        {/* Low stock badge with left count */}
+                                        {meal.meal_stock !== undefined && meal.meal_stock < 10 && (
+                                            <div className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-md shadow">
+                                                Low Stock ({meal.meal_stock} left)
+                                            </div>
+                                        )}
+
                                         <img
                                             src={meal.meal_image || 'https://via.placeholder.com/150'}
                                             alt={meal.meal_name || 'Meal Image'}
