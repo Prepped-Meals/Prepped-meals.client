@@ -3,7 +3,7 @@ import Button from "../components/button";
 import SidebarAdmin from "../components/sidebarAdmin";
 import Header from "../components/headerAdmin";
 import axios from 'axios';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 
 const AdminMealReports = () => {
     const [lowStockMeals, setLowStockMeals] = useState([]);
@@ -13,15 +13,12 @@ const AdminMealReports = () => {
     const [showFastSlow, setShowFastSlow] = useState(false);
     const [lowStockLastUpdated, setLowStockLastUpdated] = useState(null);
     const [movingMealsLastUpdated, setMovingMealsLastUpdated] = useState(null);
-
-    // NEW: Date range state for fast/slow moving meals filter
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-
-    // NEW: Stock filter mode state ('low' or 'lowest')
     const [stockFilterMode, setStockFilterMode] = useState('low');
+    const [error, setError] = useState(null);
 
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
 
     const fetchLowStockMeals = async () => {
         try {
@@ -29,15 +26,33 @@ const AdminMealReports = () => {
             setLowStockMeals(response.data);
             setShowLowStock(true);
             setLowStockLastUpdated(new Date());
+            setError(null);
         } catch (error) {
             console.error('Error fetching low stock meals:', error);
+            setError("Failed to fetch low stock meals. Please try again.");
         }
     };
 
-    // UPDATED: Use startDate and endDate to fetch filtered moving meals
     const fetchMovingMeals = async () => {
+        setError(null);
+        
         if (!startDate || !endDate) {
-            alert("Please select both start and end dates.");
+            setError("Please select both start and end dates.");
+            return;
+        }
+
+        if (startDate > today) {
+            setError("Start date cannot be after today.");
+            return;
+        }
+
+        if (endDate > today) {
+            setError("End date cannot be after today.");
+            return;
+        }
+
+        if (startDate >= endDate) {
+            setError("Start date must be before end date.");
             return;
         }
 
@@ -47,8 +62,10 @@ const AdminMealReports = () => {
             setSlowMovingMeals(response.data.slowMovingMeals);
             setShowFastSlow(true);
             setMovingMealsLastUpdated(new Date());
+            setError(null);
         } catch (error) {
             console.error('Error fetching moving meals:', error);
+            setError("Failed to fetch moving meals report. Please try again.");
         }
     };
 
@@ -60,15 +77,33 @@ const AdminMealReports = () => {
             link.href = URL.createObjectURL(blob);
             link.download = 'low-stock-report.pdf';
             link.click();
+            setError(null);
         } catch (error) {
             console.error('Error downloading low stock report PDF:', error);
+            setError("Failed to download low stock report. Please try again.");
         }
     };
 
-    // UPDATED: Use startDate and endDate to download filtered fast/slow moving meals report PDF
     const handleDownloadFastSlowMovingReport = async () => {
+        setError(null);
+        
         if (!startDate || !endDate) {
-            alert('Please select both start and end dates.');
+            setError("Please select both start and end dates.");
+            return;
+        }
+
+        if (startDate > today) {
+            setError("Start date cannot be after today.");
+            return;
+        }
+
+        if (endDate > today) {
+            setError("End date cannot be after today.");
+            return;
+        }
+
+        if (startDate >= endDate) {
+            setError("Start date must be before end date.");
             return;
         }
 
@@ -79,8 +114,10 @@ const AdminMealReports = () => {
             link.href = URL.createObjectURL(blob);
             link.download = `moving-meals-report-${startDate}-to-${endDate}.pdf`;
             link.click();
+            setError(null);
         } catch (error) {
             console.error('Error downloading fast/slow moving report PDF:', error);
+            setError("Failed to download moving meals report. Please try again.");
         }
     };
 
@@ -102,43 +139,19 @@ const AdminMealReports = () => {
         return Object.values(mealsMap);
     };
 
-    // New handlers with validation for today and no equal start/end dates
     const handleStartDateChange = (e) => {
         const newStartDate = e.target.value;
-
-        if (newStartDate > today) {
-            alert('Start date cannot be after today.');
-            return;
-        }
-
-        if (endDate && (newStartDate >= endDate)) {
-            alert('Start date must be before end date.');
-            return;
-        }
-
         setStartDate(newStartDate);
     };
 
     const handleEndDateChange = (e) => {
         const newEndDate = e.target.value;
-
-        if (newEndDate > today) {
-            alert('End date cannot be after today.');
-            return;
-        }
-
-        if (startDate && (newEndDate <= startDate)) {
-            alert('End date must be after start date.');
-            return;
-        }
-
         setEndDate(newEndDate);
     };
 
-    // Filter low stock meals according to selected filter mode
     const filteredLowStockMeals = lowStockMeals.filter(meal => {
         if (stockFilterMode === 'lowest') return meal.meal_stock < 4;
-        return true; // 'low' mode shows all low stock meals (assuming <10 on backend)
+        return true;
     });
 
     return (
@@ -153,7 +166,21 @@ const AdminMealReports = () => {
                         Meal Reports
                     </h1>
 
-                    {/* Changed container here to stack reports vertically */}
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <p className="text-sm text-red-700">{error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex flex-col gap-8">
                         {/* Low Stock Report */}
                         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition duration-300">
@@ -171,7 +198,6 @@ const AdminMealReports = () => {
 
                             {showLowStock && (
                                 <>
-                                    {/* Dropdown for filtering mode */}
                                     <div className="flex items-center gap-4 mb-4">
                                         <label className="text-gray-700 font-medium">Filter:</label>
                                         <select
@@ -205,49 +231,58 @@ const AdminMealReports = () => {
                                         </table>
                                     </div>
 
-                                    {/* Chart for Low Stock */}
                                     {filteredLowStockMeals.length > 0 && (
-                                        <div className="mt-6" style={{ width: '100%', height: 300 }}>
-                                            <ResponsiveContainer>
-                                                <BarChart data={filteredLowStockMeals}>
-                                                    <CartesianGrid strokeDasharray="3 3" />
-                                                    <XAxis dataKey="meal_name" />
-                                                    <YAxis />
-                                                    <Tooltip />
-                                                    <Legend />
-                                                    <Bar
-                                                        dataKey="meal_stock"
-                                                        name="Meal Stock"
-                                                        isAnimationActive={false}
-                                                        shape={({ x, y, width, height, payload }) => {
-                                                            const isLowStock = payload.meal_stock < 4;
-                                                            return (
-                                                                <g>
-                                                                    <rect
-                                                                        x={x}
-                                                                        y={y}
-                                                                        width={width}
-                                                                        height={height}
-                                                                        fill={isLowStock ? '#f87171' : '#8884d8'}
-                                                                    />
-                                                                    {isLowStock && (
-                                                                        <text
-                                                                            x={x + width / 2}
-                                                                            y={y - 10}
-                                                                            textAnchor="middle"
-                                                                            fill="#e11d48"
-                                                                            fontSize={12}
-                                                                            fontWeight="bold"
-                                                                        >
-                                                                            Low Stock
-                                                                        </text>
-                                                                    )}
-                                                                </g>
-                                                            );
-                                                        }}
-                                                    />
-                                                </BarChart>
-                                            </ResponsiveContainer>
+                                        <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+                                            <h3 className="text-lg font-medium text-gray-700 mb-4">Stock Levels</h3>
+                                            <div className="mb-4 flex items-center gap-4">
+                                                <div className="flex items-center">
+                                                    <div className="w-4 h-4 bg-purple-600 mr-2"></div>
+                                                    <span className="text-sm">Low Stock (4-9)</span>
+                                                </div>
+                                                <div className="flex items-center">
+                                                    <div className="w-4 h-4 bg-red-500 mr-2"></div>
+                                                    <span className="text-sm">Critical Stock (&lt;4)</span>
+                                                </div>
+                                            </div>
+                                            <div style={{ width: '100%', height: 400 }}>
+                                                <ResponsiveContainer>
+                                                    <BarChart
+                                                        data={filteredLowStockMeals}
+                                                        margin={{ top: 20, right: 30, left: 40, bottom: 20 }}
+                                                        layout="vertical"
+                                                    >
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                                        <XAxis type="number" />
+                                                        <YAxis
+                                                            dataKey="meal_name"
+                                                            type="category"
+                                                            width={150}
+                                                            tick={{ fontSize: 12 }}
+                                                            interval={0}
+                                                        />
+                                                        <Tooltip
+                                                            contentStyle={{
+                                                                borderRadius: '6px',
+                                                                border: 'none',
+                                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                                            }}
+                                                        />
+                                                        <Legend />
+                                                        <Bar
+                                                            dataKey="meal_stock"
+                                                            name="Stock Level"
+                                                            radius={[0, 4, 4, 0]}
+                                                        >
+                                                            {filteredLowStockMeals.map((entry, index) => (
+                                                                <Cell
+                                                                    key={`cell-${index}`}
+                                                                    fill={entry.meal_stock < 4 ? '#ef4444' : '#9333ea'}
+                                                                />
+                                                            ))}
+                                                        </Bar>
+                                                    </BarChart>
+                                                </ResponsiveContainer>
+                                            </div>
                                         </div>
                                     )}
                                 </>
@@ -258,7 +293,6 @@ const AdminMealReports = () => {
                         <div className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition duration-300">
                             <h2 className="text-xl font-semibold text-gray-700 mb-4">Fast/Slow Moving Report</h2>
 
-                            {/* NEW: Date range inputs */}
                             <div className="flex gap-4 mb-4 items-center">
                                 <label className="text-gray-700 font-medium">Start Date:</label>
                                 <input
@@ -310,20 +344,51 @@ const AdminMealReports = () => {
                                         </table>
                                     </div>
 
-                                    {/* Chart for Fast/Slow Moving Meals */}
                                     {fastMovingMeals.length + slowMovingMeals.length > 0 && (
-                                        <div className="mt-6" style={{ width: '100%', height: 300 }}>
-                                            <ResponsiveContainer>
-                                                <BarChart data={combinedMovingMeals()}>
-                                                    <CartesianGrid strokeDasharray="3 3" />
-                                                    <XAxis dataKey="meal_name" />
-                                                    <YAxis />
-                                                    <Tooltip />
-                                                    <Legend />
-                                                    <Bar dataKey="fast" name="Fast Moving" fill="#60a5fa" />
-                                                    <Bar dataKey="slow" name="Slow Moving" fill="#f87171" />
-                                                </BarChart>
-                                            </ResponsiveContainer>
+                                        <div className="mt-6 bg-gray-50 p-4 rounded-lg">
+                                            <h3 className="text-lg font-medium text-gray-700 mb-4">Sales Performance</h3>
+                                            <div style={{ width: '100%', height: 350 }}>
+                                                <ResponsiveContainer>
+                                                    <BarChart
+                                                        data={combinedMovingMeals()}
+                                                        margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
+                                                    >
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                                        <XAxis
+                                                            dataKey="meal_name"
+                                                            tick={{ fontSize: 12 }}
+                                                        />
+                                                        <YAxis
+                                                            label={{
+                                                                value: 'Units Sold',
+                                                                angle: -90,
+                                                                position: 'insideLeft',
+                                                                style: { fontSize: 12 }
+                                                            }}
+                                                        />
+                                                        <Tooltip
+                                                            contentStyle={{
+                                                                borderRadius: '6px',
+                                                                border: 'none',
+                                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                                            }}
+                                                        />
+                                                        <Legend />
+                                                        <Bar
+                                                            dataKey="fast"
+                                                            name="Fast Moving"
+                                                            fill="#60a5fa"
+                                                            radius={[4, 4, 0, 0]}
+                                                        />
+                                                        <Bar
+                                                            dataKey="slow"
+                                                            name="Slow Moving"
+                                                            fill="#f87171"
+                                                            radius={[4, 4, 0, 0]}
+                                                        />
+                                                    </BarChart>
+                                                </ResponsiveContainer>
+                                            </div>
                                         </div>
                                     )}
                                 </>
