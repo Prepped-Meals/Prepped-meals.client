@@ -19,6 +19,8 @@ const Payment = () => {
     paymentMethod: "",
   });
   const [checkboxError, setCheckboxError] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const [address, setAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -97,17 +99,21 @@ const Payment = () => {
     const hasLetter = /[a-zA-Z]/.test(address);
     const hasNumber = /\d/.test(address);
     if (!address.trim() || !(hasLetter && hasNumber)) {
-      newErrors.address = "Address must contain both letters and numbers";
+      newErrors.address = "Address required";
+      valid = false;
+    } else if (address.length < 10) {
+      newErrors.address = "Address must be valid address";
       valid = false;
     }
 
-    if (!/^\d{10}$/.test(phoneNumber)) {
-      newErrors.phoneNumber = "Phone number must be exactly 10 digits";
+    if (!/^\d{10}$/.test(phoneNumber) || /^0+$/.test(phoneNumber)) {
+      newErrors.phoneNumber = "Enter a valid 10-digit phone number";
       valid = false;
     }
 
-    if (!paymentMethod) {
-      newErrors.paymentMethod = "Please select a payment method";
+    const allowedMethods = ["CashOnDelivery", "CardPayment"];
+    if (!allowedMethods.includes(paymentMethod)) {
+      newErrors.paymentMethod = "Invalid payment method selected";
       valid = false;
     }
 
@@ -125,6 +131,24 @@ const Payment = () => {
     }
 
     if (paymentMethod === "CashOnDelivery") {
+      setShowConfirmation(true);
+    } else if (paymentMethod === "CardPayment") {
+      navigate(ROUTES.CARDPAYMENT, {
+        state: {
+          customer: user._id,
+          address,
+          phone_number: phoneNumber,
+          payment_amount: total,
+          payment_type: paymentMethod,
+          cart_items: cartItems,
+        },
+      });
+    }
+  };
+
+  const confirmOrder = async () => {
+    setShowConfirmation(false);
+    try {
       savePaymentDetails(
         {
           customer: user._id,
@@ -148,8 +172,11 @@ const Payment = () => {
                 })),
                 order_received_date: new Date(),
               });
-              alert("Order placed successfully!");
-              navigate(ROUTES.ORDER);
+              setShowSuccess(true);
+              setTimeout(() => {
+                setShowSuccess(false);
+                navigate(ROUTES.ORDER);
+              }, 2000);
             } catch (orderError) {
               console.error("Error saving order:", orderError);
               alert("Error saving order: " + orderError.message);
@@ -161,18 +188,14 @@ const Payment = () => {
           },
         }
       );
-    } else if (paymentMethod === "CardPayment") {
-      navigate(ROUTES.CARDPAYMENT, {
-        state: {
-          customer: user._id,
-          address,
-          phone_number: phoneNumber,
-          payment_amount: total,
-          payment_type: paymentMethod,
-          cart_items: cartItems,
-        },
-      });
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred: " + error.message);
     }
+  };
+
+  const cancelOrder = () => {
+    setShowConfirmation(false);
   };
 
   return (
@@ -180,6 +203,60 @@ const Payment = () => {
       className="relative min-h-screen flex items-center justify-center bg-cover bg-center px-4 py-10"
       style={{ backgroundImage: `url(${paymentBg})` }}
     >
+      {/* Confirmation Popup */}
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-xl max-w-md w-full">
+            <h3 className="text-xl font-bold text-green-800 mb-4">
+              Confirm Order
+            </h3>
+            <p className="mb-6">Are you sure you want to place this order?</p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={cancelOrder}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+              >
+                No
+              </button>
+              <button
+                onClick={confirmOrder}
+                className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800"
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Popup */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-xl max-w-md w-full text-center">
+            <h3 className="text-xl font-bold text-green-800 mb-4">
+              Order Placed Successfully!
+            </h3>
+            <p className="mb-4">Your order has been placed successfully.</p>
+            <div className="animate-pulse text-green-600">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 mx-auto"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="absolute inset-0 bg-gradient-to-br from-green-900/60 to-black/60 backdrop-blur-sm z-0" />
       <div className="relative z-10 bg-white/90 backdrop-blur-xl shadow-2xl rounded-3xl p-10 max-w-2xl w-full">
         <button

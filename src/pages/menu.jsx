@@ -18,6 +18,7 @@ const Menu = () => {
   const [cartQuantities, setCartQuantities] = useState({});
   const [alertMessage, setAlertMessage] = useState("");
 
+  // eslint-disable-next-line
   const { mutate: saveCart, isLoading: savingCart } = useSaveCart();
 
   useEffect(() => {

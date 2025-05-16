@@ -1,6 +1,9 @@
 import { Outlet, useLocation } from "react-router-dom";
 import NavBar from "./components/navbar";
 import Footer from "./components/footer";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 
 function App() {
   const location = useLocation();
@@ -20,6 +23,7 @@ function App() {
     <>
       {!shouldHideNav && <NavBar />}
       <Outlet />
+      <ToastContainer />
       {!shouldHideNav && <Footer />}
     </>
   );
