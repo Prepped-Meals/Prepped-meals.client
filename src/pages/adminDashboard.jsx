@@ -1,164 +1,432 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import SidebarAdmin from '../components/sidebarAdmin';
 import HeaderAdmin from '../components/headerAdmin';
-// import dashImage from "../assets/images/mealA.jpg";
 import dashImage from "../assets/images/meallsss.jpg";
-import { FaFire} from 'react-icons/fa';
-import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale } from 'chart.js';
+import { FaUsers, FaUtensils, FaShoppingBag, FaDollarSign} from 'react-icons/fa';
+import { Line, Bar, Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+import { FiTrendingUp } from 'react-icons/fi';
+import { BsGraphUp, BsThreeDotsVertical } from 'react-icons/bs';
+import { END_POINTS } from '../api/endPoints';
+import axios from 'axios';
 
-ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale);
+ChartJS.register(
+  LineElement, 
+  PointElement, 
+  LinearScale, 
+  CategoryScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 const DashboardAdmin = () => {
-  const summary = {
-    totalMeals: 150,
-    totalOrders: 120,
-    totalCustomers: 250,
-    activeOrders: 25,
-  };
+  const [summary, setSummary] = useState({
+    totalMeals: 0,
+    totalOrders: 0,
+    totalCustomers: 0,
+    totalRevenue: 0,
+  });
+  const [topMeals, setTopMeals] = useState([]);
+  const [topCustomers, setTopCustomers] = useState([]);
+  const [orderStatusData, setOrderStatusData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const activeOrders = [
-    { id: '#457', meal: 'Butter Chicken' },
-    { id: '#679', meal: 'Chicken And Broccoli' },
-    { id: '#796', meal: 'Vegetable Salad' },
-    { id: '#801', meal: 'Pasta Primavera' },
-    { id: '#802', meal: 'Quinoa Bowl' },
-    { id: '#803', meal: 'Tuna Sandwich' },
-    { id: '#804', meal: 'Fruit Salad' },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch all data in parallel
+        const [
+          customersRes, 
+          ordersRes, 
+          mealsRes,
+          topCustomersRes,
+          orderStatusRes
+        ] = await Promise.all([
+          axios.get(END_POINTS.GET_CUSTOMER_DETAILS),
+          axios.get(END_POINTS.GET_ORDER_DETAILS),
+          axios.get(END_POINTS.GET_MEAL_DETAILS),
+          axios.get(END_POINTS.GET_TOP_CUSTOMERS_REPORT),
+          axios.get(END_POINTS.GET_ORDER_STATUS_REPORT)
+        ]);
 
-  const topMeals = [
-    { meal: 'Butter Chicken', orders: 45 },
-    { meal: 'Chicken And Broccoli', orders: 38 },
-    { meal: 'Pasta Primavera', orders: 30 },
-  ];
+        
 
-  const topCustomers = [
-    { name: 'Dewmi Oshadhi', orders: 25 },
-    { name: 'Selena Rodrigo', orders: 20 },
-    { name: 'Selena Fonseka', orders: 18 },
-  ];
+        // Extract data from responses
+        const customersData = customersRes.data || [];
+        const ordersData = ordersRes.data?.data || [];
+        const mealsData = mealsRes.data?.data || [];
+        const topCustomersData = topCustomersRes.data?.data || [];
+        const orderStatusReport = orderStatusRes.data?.data || {};
+
+        // Calculate total revenue
+        const totalRevenue = Array.isArray(ordersData) ? 
+          ordersData.reduce((sum, order) => {
+            return sum + (order.payment?.payment_amount || 0);
+          }, 0) : 0;
+
+        // Calculate top meals
+        const mealOrders = {};
+        if (Array.isArray(ordersData)) {
+          ordersData.forEach(order => {
+            if (Array.isArray(order.cart_items)) {
+              order.cart_items.forEach(item => {
+                if (!mealOrders[item.meal_name]) {
+                  mealOrders[item.meal_name] = 0;
+                }
+                mealOrders[item.meal_name] += item.quantity || 0;
+              });
+            }
+          });
+        }
+
+        const topMeals = Object.entries(mealOrders)
+          .map(([meal, orders]) => ({ meal, orders }))
+          .sort((a, b) => b.orders - a.orders)
+          .slice(0, 5);
+
+        // Update state with total customers count
+        setSummary({
+          totalMeals: Array.isArray(mealsData) ? mealsData.length : 0,
+          totalOrders: Array.isArray(ordersData) ? ordersData.length : 0,
+          totalCustomers: Array.isArray(customersData) ? customersData.length : 0,
+          totalRevenue
+        });
+
+        setTopMeals(topMeals);
+        setTopCustomers(Array.isArray(topCustomersData) ? topCustomersData.slice(0, 5) : []);
+        setOrderStatusData(orderStatusReport);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+        console.error('Error fetching dashboard data:', err);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const orderTrendData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
       {
         label: 'Orders',
-        data: [12, 19, 14, 20, 16, 22, 25],
+        data: [120, 190, 140, 210, 160, 220],
         fill: true,
-        backgroundColor: 'rgba(134, 182, 246, 0.2)',
-        borderColor: '#86b6f6',
+        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+        borderColor: '#6366f1',
         tension: 0.4,
+        pointBackgroundColor: '#6366f1',
+        pointBorderColor: '#fff',
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#6366f1',
+        pointHoverBorderColor: '#fff',
+        pointHitRadius: 10,
+        pointBorderWidth: 2,
       },
     ],
   };
 
-  const orderTrendOptions = {
+  const revenueData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    datasets: [
+      {
+        label: 'Revenue (LKR)',
+        data: [125000, 190000, 140000, 210000, 160000, 220000],
+        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+        borderColor: 'rgba(16, 185, 129, 1)',
+        borderWidth: 1,
+        borderRadius: 4,
+      }
+    ]
+  };
+
+  const orderStatusPieData = {
+    labels: Object.keys(orderStatusData),
+    datasets: [
+      {
+        data: Object.values(orderStatusData),
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.7)',
+          'rgba(54, 162, 235, 0.7)',
+          'rgba(255, 206, 86, 0.7)',
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(153, 102, 255, 0.7)',
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
+      legend: {
+        position: 'bottom',
+      },
+      tooltip: {
+        backgroundColor: '#1f2937',
+        titleFont: { size: 14, weight: 'bold' },
+        bodyFont: { size: 12 },
+        padding: 12,
+        cornerRadius: 8,
+      },
     },
     scales: {
-      y: { beginAtZero: true },
+      y: { 
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+        },
+        ticks: {
+          callback: function(value) {
+            return value.toLocaleString();
+          }
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        }
+      }
     },
   };
 
-  const colors = {
-    totalMeals: 'bg-[#ade792]',
-    totalOrders: 'bg-[#ffd56b]',
-    totalCustomers: 'bg-[#86b6f6]',
-    activeOrders: 'bg-[#ff8fab]',
-  };
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <SidebarAdmin />
+        <div className="flex-1 flex flex-col">
+          <HeaderAdmin />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <SidebarAdmin />
+        <div className="flex-1 flex flex-col">
+          <HeaderAdmin />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              Error loading dashboard data: {error}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen bg-[#d1dfcd]">
-      {/* Sidebar */}
+    <div className="flex min-h-screen bg-gray-50">
       <SidebarAdmin />
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
+      <div className="flex-1 flex flex-col overflow-hidden">
         <HeaderAdmin />
-
-        {/* Image Banner */}
-        <div>
-          <img src={dashImage} alt="Meal banner" className="w-full h-64 object-cover" />
+        <div className="relative h-64 overflow-hidden">
+          <img 
+            src={dashImage} 
+            alt="Meal banner" 
+            className="w-full h-full object-cover" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-transparent opacity-80"></div>
+          <div className="absolute inset-0 flex items-center pl-12">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>              
+            </div>
+          </div>
         </div>
-
-        {/* Main Content */}
-        <div className="p-8 flex flex-col gap-8">
-          {/* Overview Cards */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(summary).map(([key, value]) => (
-              <div
-                key={key}
-                className={`${colors[key]} rounded-xl text-center p-4 h-28 flex flex-col justify-center items-center shadow-md`}
-              >
-                <h3 className="text-gray-800 font-semibold text-sm">
-                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                </h3>
-                <p className="text-2xl font-bold mt-1">{value}</p>
+        <div className="p-8 flex flex-col gap-8 overflow-y-auto">
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-lg border-l-4 border-blue-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Meals</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">{summary.totalMeals}</p>
+                </div>
+                <div className="p-3 rounded-full bg-blue-100 text-blue-600">
+                  <FaUtensils className="h-6 w-6" />
+                </div>
               </div>
-            ))}
+              <div className="mt-4 flex items-center text-sm text-green-600">
+                <FiTrendingUp className="mr-1" />
+                <span>12% from last month</span>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-lg border-l-4 border-yellow-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Orders</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">{summary.totalOrders}</p>
+                </div>
+                <div className="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                  <FaShoppingBag className="h-6 w-6" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm text-green-600">
+                <FiTrendingUp className="mr-1" />
+                <span>8% from last month</span>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-lg border-l-4 border-indigo-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Customers</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">{summary.totalCustomers}</p>
+                </div>
+                <div className="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                  <FaUsers className="h-6 w-6" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm text-green-600">
+                <FiTrendingUp className="mr-1" />
+                <span>5% from last month</span>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl p-6 shadow-lg border-l-4 border-green-500">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Revenue</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-1">
+                    LKR {summary.totalRevenue.toLocaleString()}
+                  </p>
+                </div>
+                <div className="p-3 rounded-full bg-green-100 text-green-600">
+                  <FaDollarSign className="h-6 w-6" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center text-sm text-green-600">
+                <FiTrendingUp className="mr-1" />
+                <span>15% from last month</span>
+              </div>
+            </div>
           </section>
-
-          {/* Details Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Active Orders List */}
-            <div className="bg-white rounded-2xl p-6 shadow">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Recent Active Orders</h2>
-              <ul className="divide-y divide-gray-200">
-                {activeOrders.slice(0, 5).map((order, idx) => (
-                  <li key={idx} className="py-3 flex justify-between">
-                    <span className="font-medium">{order.meal}</span>
-                    <span className="text-gray-500">{order.id}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Top Meals */}
-            <div className="bg-white rounded-2xl p-6 shadow">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Top Meals</h2>
-              <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="bg-white rounded-2xl p-6 shadow-lg lg:col-span-1">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-800">Popular Meals</h2>
+                <div className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                  <BsThreeDotsVertical />
+                </div>
+              </div>
+              <div className="space-y-5">
                 {topMeals.map((meal, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <FaFire className="text-red-500" />
-                    <div className="flex justify-between w-full">
-                      <span className="font-medium">{meal.meal}</span>
-                      <span className="text-gray-500">{meal.orders} Orders</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Top Customers */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-2xl p-6 shadow">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Top Customers</h2>
-              <div className="space-y-3">
-                {topCustomers.map((customer, idx) => (
-                  <div key={idx} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="bg-[#d1dfcd] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold text-gray-700">
-                        {idx + 1}
+                  <div key={idx} className="flex items-center">
+                    <div className="relative w-full">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-gray-800">{meal.meal}</span>
+                        <span className="text-sm font-medium text-gray-500">{meal.orders} orders</span>
                       </div>
-                      <span>{customer.name}</span>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div 
+                          className="bg-blue-600 h-2.5 rounded-full" 
+                          style={{ width: `${(meal.orders / (topMeals[0]?.orders || 1)) * 100}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <span className="text-gray-500">{customer.orders} Orders</span>
                   </div>
                 ))}
+                {topMeals.length === 0 && (
+                  <p className="text-center text-gray-500 py-4">No meal data available</p>
+                )}
               </div>
             </div>
-
-            {/* Order Trend Chart */}
-            <div className="bg-white rounded-2xl p-6 shadow">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Order Trend (Last 7 Days)</h2>
-              <Line data={orderTrendData} options={orderTrendOptions} />
+            <div className="bg-white rounded-2xl p-6 shadow-lg lg:col-span-1">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-800">Top Customers</h2>
+                <div className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                  <BsThreeDotsVertical />
+                </div>
+              </div>
+              <div className="space-y-4">
+                {topCustomers.map((customer, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className="flex items-center">
+                      <div className="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center text-sm font-bold text-gray-700">
+                        {customer.name.charAt(0)}
+                      </div>
+                      <div className="ml-3">
+                        <p className="font-medium text-gray-800">{customer.name}</p>
+                        <p className="text-xs text-gray-500">{customer.email || 'Loyal customer'}</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700">{customer.totalOrders} orders</span>
+                  </div>
+                ))}
+                {topCustomers.length === 0 && (
+                  <p className="text-center text-gray-500 py-4">No customer data available</p>
+                )}
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-6 shadow-lg lg:col-span-1">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-800">Order Status</h2>
+                <div className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                  <BsThreeDotsVertical />
+                </div>
+              </div>
+              <div className="h-80">
+                <Pie data={orderStatusPieData} options={chartOptions} />
+              </div>
             </div>
           </div>
-
+          <div className="grid grid-cols-1 gap-8">
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-800">Order Analytics</h2>
+                <div className="flex items-center text-sm text-gray-500">
+                  <BsGraphUp className="mr-1" />
+                  <span>Last 6 months</span>
+                </div>
+              </div>
+              <div className="h-80">
+                <Line data={orderTrendData} options={chartOptions} />
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-800">Revenue Analytics</h2>
+                <div className="flex items-center text-sm text-green-600">
+                  <FiTrendingUp className="mr-1" />
+                  <span>15% growth</span>
+                </div>
+              </div>
+              <div className="h-80">
+                <Bar data={revenueData} options={{
+                  ...chartOptions,
+                  scales: {
+                    ...chartOptions.scales,
+                    y: {
+                      ...chartOptions.scales.y,
+                      ticks: {
+                        callback: function(value) {
+                          return 'LKR ' + value.toLocaleString();
+                        }
+                      }
+                    }
+                  }
+                }} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
