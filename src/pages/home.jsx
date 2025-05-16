@@ -58,14 +58,16 @@ const Home = () => {
         />
       </div>
 
-      {/* Featured Meals Section */}
+      {/* Why You'll Love Our Meals Section */}
       <section className="w-full px-4 py-16 text-center bg-gradient-to-r from-teal-100 to-pink-100 rounded-lg shadow-lg">
         <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-          Our Top-Rated Meals
+          Why You'll Love Our Meals
         </h2>
-        <p className="text-lg text-gray-600 mb-12">
-          Handpicked for taste, health, and satisfaction – here's why our
-          customers love them.
+        <p className="text-lg text-gray-700 mb-12 max-w-3xl mx-auto">
+          Every meal we serve is thoughtfully designed to nourish your body,
+          excite your taste buds, and make healthy eating effortless. From
+          energizing breakfasts to balanced dinners — our meals deliver flavor,
+          freshness, and real results.
         </p>
 
         <div className="grid gap-8 md:grid-cols-4 sm:grid-cols-2">

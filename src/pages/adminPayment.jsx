@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import SidebarAdmin from "../components/sidebarAdmin";
 import Header from "../components/headerAdmin";
 import useGetPaymentDetails from "../hooks/useGetPaymentDetails";
@@ -8,6 +8,9 @@ import Chart from "chart.js/auto";
 
 const AdminPaymentPage = () => {
   const { loading, data, error } = useGetPaymentDetails();
+  const [showTopCustomers, setShowTopCustomers] = useState(false);
+  const [showPaymentMethod, setShowPaymentMethod] = useState(false);
+  const [showBusiestDay, setShowBusiestDay] = useState(false);
 
   const generatePDF = async () => {
     const doc = new jsPDF();
@@ -144,7 +147,7 @@ const AdminPaymentPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
+    <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-indigo-50">
       {/* Sidebar */}
       <SidebarAdmin />
 
@@ -154,20 +157,23 @@ const AdminPaymentPage = () => {
         <Header />
 
         {/* Dashboard Content */}
-        <main className="p-10 space-y-10 overflow-y-auto">
+        <main className="p-8 space-y-8 overflow-y-auto">
           {/* Title and Action */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-extrabold text-gray-800 mb-1">
-                Weekly Payment Summary
+              <h1 className="text-4xl font-bold text-gray-800 mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+                Weekly Payment Dashboard
               </h1>
-              <p className="text-md text-gray-500">
-                Insights into customer payments for better business decisions.
+              <p className="text-lg text-gray-600 max-w-2xl">
+                Comprehensive insights into customer payment activities.
+                <span className="block text-sm text-gray-400 mt-1">
+                  Last updated: {new Date().toLocaleDateString()}
+                </span>
               </p>
             </div>
             <button
               onClick={generatePDF}
-              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 hover:scale-105 transition-all"
+              className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
             >
               <svg
                 className="w-5 h-5 mr-2"
@@ -182,100 +188,274 @@ const AdminPaymentPage = () => {
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              Download Report
+              Generate Report
             </button>
           </div>
 
-          {/* Summary Cards */}
+          {/* Welcome Card */}
+          <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 hover:shadow-xl transition-all">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="flex-1">
+                <h2 className="text-3xl font-bold text-gray-800 mb-3">
+                  Payment Insights
+                </h2>
+                <p className="text-gray-600 text-lg mb-4">
+                  Explore key payment metrics and customer behaviors. Click the
+                  view buttons below to reveal specific insights.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setShowTopCustomers(!showTopCustomers)}
+                    className="px-5 py-2.5 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition-colors"
+                  >
+                    {showTopCustomers ? "Hide" : "View"} Top Customers
+                  </button>
+                  <button
+                    onClick={() => setShowPaymentMethod(!showPaymentMethod)}
+                    className="px-5 py-2.5 bg-purple-100 text-purple-700 rounded-lg font-medium hover:bg-purple-200 transition-colors"
+                  >
+                    {showPaymentMethod ? "Hide" : "View"} Payment Method
+                  </button>
+                  <button
+                    onClick={() => setShowBusiestDay(!showBusiestDay)}
+                    className="px-5 py-2.5 bg-indigo-100 text-indigo-700 rounded-lg font-medium hover:bg-indigo-200 transition-colors"
+                  >
+                    {showBusiestDay ? "Hide" : "View"} Busiest Day
+                  </button>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <div className="w-64 h-64 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-inner">
+                  <svg
+                    className="w-32 h-32 text-white opacity-90"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Loading and Error States */}
           {loading ? (
             <div className="flex justify-center items-center h-64">
-              <p className="text-gray-500 text-lg animate-pulse">
-                Loading payment report...
-              </p>
+              <div className="animate-pulse flex flex-col items-center">
+                <div className="w-16 h-16 bg-blue-200 rounded-full mb-4"></div>
+                <p className="text-gray-500 text-lg">Loading payment data...</p>
+              </div>
             </div>
           ) : error ? (
-            <div className="flex justify-center items-center h-64">
-              <p className="text-red-500 text-lg">{error}</p>
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-red-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Top 3 Customers */}
-                <div className="bg-white p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all">
-                  <h2 className="text-2xl font-semibold mb-6 text-gray-700 flex items-center">
-                    🏆 Top 3 Customers
-                  </h2>
-                  <ul className="space-y-4">
-                    {data.topCustomers.map((customer, index) => (
-                      <li
-                        key={index}
-                        className="flex justify-between items-center text-gray-600 font-medium"
+              {/* Hidden Cards that appear when buttons are clicked */}
+              {showTopCustomers && (
+                <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fadeIn">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-semibold text-gray-800 flex items-center">
+                      <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3">
+                        🏆
+                      </span>
+                      Top Customers
+                    </h2>
+                    <button
+                      onClick={() => setShowTopCustomers(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <span>{customer.customer_name}</span>
-                        <span className="text-blue-600 font-bold">
-                          Rs.{customer.totalPaid}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    {data.topCustomers.map((customer, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold mr-3">
+                            {index + 1}
+                          </div>
+                          <span className="font-medium text-gray-700">
+                            {customer.customer_name}
+                          </span>
+                        </div>
+                        <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
+                          Rs. {customer.totalPaid}
                         </span>
-                      </li>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
+              )}
 
-                {/* Most Used Payment Method */}
-                <div className="bg-white p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all">
-                  <h2 className="text-2xl font-semibold mb-6 text-gray-700 flex items-center">
-                    💳 Most Used Payment Method
-                  </h2>
-                  <p className="text-gray-600 text-xl font-bold">
-                    {data.mostUsedPaymentMethod}
+              {showPaymentMethod && (
+                <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fadeIn">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-semibold text-gray-800 flex items-center">
+                      <span className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3">
+                        💳
+                      </span>
+                      Most Used Payment Method
+                    </h2>
+                    <button
+                      onClick={() => setShowPaymentMethod(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                      <svg
+                        className="w-12 h-12 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-3xl font-bold text-gray-800">
+                      {data.mostUsedPaymentMethod}
+                    </p>
+                    <p className="text-gray-500 mt-2">Preferred by customers</p>
+                  </div>
+                </div>
+              )}
+
+              {showBusiestDay && (
+                <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 animate-fadeIn">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-semibold text-gray-800 flex items-center">
+                      <span className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mr-3">
+                        📅
+                      </span>
+                      Busiest Payment Day
+                    </h2>
+                    <button
+                      onClick={() => setShowBusiestDay(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                      <svg
+                        className="w-12 h-12 text-indigo-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-3xl font-bold text-gray-800">
+                      {data.busiestDay}
+                    </p>
+                    <p className="text-gray-500 mt-2">Peak transaction day</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State when nothing is selected */}
+              {!showTopCustomers && !showPaymentMethod && !showBusiestDay && (
+                <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-lg border border-gray-100">
+                  <svg
+                    className="w-24 h-24 text-gray-300 mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.5"
+                      d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  <h3 className="text-xl font-medium text-gray-500 mb-2">
+                    No insights selected
+                  </h3>
+                  <p className="text-gray-400 max-w-md text-center">
+                    Click on any of the view buttons above to display specific
+                    payment insights and metrics.
                   </p>
                 </div>
-
-                {/* Busiest Payment Day */}
-                <div className="bg-white p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all">
-                  <h2 className="text-2xl font-semibold mb-6 text-gray-700 flex items-center">
-                    📅 Busiest Payment Day
-                  </h2>
-                  <p className="text-gray-600 text-xl font-bold">
-                    {data.busiestDay}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 mt-10 rounded-2xl shadow-xl hover:shadow-2xl transition-all">
-                <div className="flex items-center mb-4">
-                  <span className="text-blue-600 text-2xl mr-3">📊</span>
-                  <h2 className="text-2xl font-semibold text-gray-700">
-                    Weekly Overview Summary
-                  </h2>
-                </div>
-                <p className="text-gray-600 text-md leading-relaxed">
-                  This screen provides a comprehensive weekly overview of
-                  payment activity. It highlights the
-                  <span className="font-semibold text-blue-600">
-                    {" "}
-                    top 3 customers
-                  </span>{" "}
-                  with the highest payment totals, showcases the{" "}
-                  <span className="font-semibold text-green-600">
-                    {" "}
-                    most frequently used payment method
-                  </span>
-                  , and identifies the{" "}
-                  <span className="font-semibold text-purple-600">
-                    {" "}
-                    busiest day
-                  </span>{" "}
-                  for customer transactions.
-                </p>
-              </div>
-
-              {/* Bottom Action */}
-              <div className="mt-10 text-center">
-                <p className="text-gray-400 text-sm">
-                  Last updated: {new Date().toLocaleDateString()} • All data is
-                  refreshed weekly
-                </p>
-              </div>
+              )}
             </>
           )}
         </main>
