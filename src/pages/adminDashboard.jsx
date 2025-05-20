@@ -3,7 +3,7 @@ import SidebarAdmin from '../components/sidebarAdmin';
 import HeaderAdmin from '../components/headerAdmin';
 import dashImage from "../assets/images/meallsss.jpg";
 import { FaUsers, FaUtensils, FaShoppingBag, FaDollarSign} from 'react-icons/fa';
-import { Line, Bar, Pie } from 'react-chartjs-2';
+import { Line, Bar} from 'react-chartjs-2';
 import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { FiTrendingUp } from 'react-icons/fi';
 import { BsGraphUp, BsThreeDotsVertical } from 'react-icons/bs';
@@ -11,9 +11,9 @@ import { END_POINTS } from '../api/endPoints';
 import axios from 'axios';
 
 ChartJS.register(
-  LineElement, 
-  PointElement, 
-  LinearScale, 
+  LineElement,
+  PointElement,
+  LinearScale,
   CategoryScale,
   BarElement,
   Title,
@@ -24,14 +24,12 @@ ChartJS.register(
 
 const DashboardAdmin = () => {
   const [summary, setSummary] = useState({
-    totalMeals: 0,
+    totalMeals: 14, 
     totalOrders: 0,
     totalCustomers: 0,
     totalRevenue: 0,
   });
   const [topMeals, setTopMeals] = useState([]);
-  const [topCustomers, setTopCustomers] = useState([]);
-  const [orderStatusData, setOrderStatusData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -39,30 +37,22 @@ const DashboardAdmin = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch all data in parallel
         const [
           customersRes, 
           ordersRes, 
-          mealsRes,
-          topCustomersRes,
-          orderStatusRes
+          // mealsRes,
         ] = await Promise.all([
           axios.get(END_POINTS.GET_CUSTOMER_DETAILS),
           axios.get(END_POINTS.GET_ORDER_DETAILS),
           axios.get(END_POINTS.GET_MEAL_DETAILS),
-          axios.get(END_POINTS.GET_TOP_CUSTOMERS_REPORT),
-          axios.get(END_POINTS.GET_ORDER_STATUS_REPORT)
         ]);
-
-        
 
         // Extract data from responses
         const customersData = customersRes.data || [];
         const ordersData = ordersRes.data?.data || [];
-        const mealsData = mealsRes.data?.data || [];
-        const topCustomersData = topCustomersRes.data?.data || [];
-        const orderStatusReport = orderStatusRes.data?.data || {};
+        // const mealsData = mealsRes.data?.data || [];
 
         // Calculate total revenue
         const totalRevenue = Array.isArray(ordersData) ? 
@@ -91,16 +81,14 @@ const DashboardAdmin = () => {
           .slice(0, 5);
 
         // Update state with total customers count
-        setSummary({
-          totalMeals: Array.isArray(mealsData) ? mealsData.length : 0,
+        setSummary(prev => ({
+          ...prev,
           totalOrders: Array.isArray(ordersData) ? ordersData.length : 0,
           totalCustomers: Array.isArray(customersData) ? customersData.length : 0,
           totalRevenue
-        });
+        }));
 
         setTopMeals(topMeals);
-        setTopCustomers(Array.isArray(topCustomersData) ? topCustomersData.slice(0, 5) : []);
-        setOrderStatusData(orderStatusReport);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -147,30 +135,6 @@ const DashboardAdmin = () => {
     ]
   };
 
-  const orderStatusPieData = {
-    labels: Object.keys(orderStatusData),
-    datasets: [
-      {
-        data: Object.values(orderStatusData),
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.7)',
-          'rgba(54, 162, 235, 0.7)',
-          'rgba(255, 206, 86, 0.7)',
-          'rgba(75, 192, 192, 0.7)',
-          'rgba(153, 102, 255, 0.7)',
-        ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -187,7 +151,7 @@ const DashboardAdmin = () => {
       },
     },
     scales: {
-      y: { 
+      y: {
         beginAtZero: true,
         grid: {
           color: 'rgba(0, 0, 0, 0.05)',
@@ -250,7 +214,7 @@ const DashboardAdmin = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-transparent opacity-80"></div>
           <div className="absolute inset-0 flex items-center pl-12">
             <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>              
+              <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
             </div>
           </div>
         </div>
@@ -319,6 +283,7 @@ const DashboardAdmin = () => {
               </div>
             </div>
           </section>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="bg-white rounded-2xl p-6 shadow-lg lg:col-span-1">
               <div className="flex items-center justify-between mb-6">
@@ -336,8 +301,8 @@ const DashboardAdmin = () => {
                         <span className="text-sm font-medium text-gray-500">{meal.orders} orders</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div 
-                          className="bg-blue-600 h-2.5 rounded-full" 
+                        <div
+                          className="bg-blue-600 h-2.5 rounded-full"
                           style={{ width: `${(meal.orders / (topMeals[0]?.orders || 1)) * 100}%` }}
                         ></div>
                       </div>
@@ -349,47 +314,8 @@ const DashboardAdmin = () => {
                 )}
               </div>
             </div>
-            <div className="bg-white rounded-2xl p-6 shadow-lg lg:col-span-1">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Top Customers</h2>
-                <div className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                  <BsThreeDotsVertical />
-                </div>
-              </div>
-              <div className="space-y-4">
-                {topCustomers.map((customer, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                    <div className="flex items-center">
-                      <div className="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center text-sm font-bold text-gray-700">
-                        {customer.name.charAt(0)}
-                      </div>
-                      <div className="ml-3">
-                        <p className="font-medium text-gray-800">{customer.name}</p>
-                        <p className="text-xs text-gray-500">{customer.email || 'Loyal customer'}</p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-700">{customer.totalOrders} orders</span>
-                  </div>
-                ))}
-                {topCustomers.length === 0 && (
-                  <p className="text-center text-gray-500 py-4">No customer data available</p>
-                )}
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-lg lg:col-span-1">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Order Status</h2>
-                <div className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                  <BsThreeDotsVertical />
-                </div>
-              </div>
-              <div className="h-80">
-                <Pie data={orderStatusPieData} options={chartOptions} />
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-8">
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+
+            <div className="bg-white rounded-2xl p-6 shadow-lg lg:col-span-2">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Order Analytics</h2>
                 <div className="flex items-center text-sm text-gray-500">
@@ -401,6 +327,9 @@ const DashboardAdmin = () => {
                 <Line data={orderTrendData} options={chartOptions} />
               </div>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8">
             <div className="bg-white rounded-2xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Revenue Analytics</h2>
@@ -410,20 +339,23 @@ const DashboardAdmin = () => {
                 </div>
               </div>
               <div className="h-80">
-                <Bar data={revenueData} options={{
-                  ...chartOptions,
-                  scales: {
-                    ...chartOptions.scales,
-                    y: {
-                      ...chartOptions.scales.y,
-                      ticks: {
-                        callback: function(value) {
-                          return 'LKR ' + value.toLocaleString();
+                <Bar 
+                  data={revenueData} 
+                  options={{
+                    ...chartOptions,
+                    scales: {
+                      ...chartOptions.scales,
+                      y: {
+                        ...chartOptions.scales.y,
+                        ticks: {
+                          callback: function(value) {
+                            return 'LKR ' + value.toLocaleString();
+                          }
                         }
                       }
                     }
-                  }
-                }} />
+                  }} 
+                />
               </div>
             </div>
           </div>
