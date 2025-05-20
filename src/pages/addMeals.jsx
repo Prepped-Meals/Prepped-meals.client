@@ -27,6 +27,7 @@ const AddMeals = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const { mutateAsync: saveMeal } = useSaveMeal();
 
+  // Validation function
   const validateField = (name, value) => {
     switch (name) {
       case 'meal_name':
@@ -64,9 +65,10 @@ const AddMeals = () => {
     return '';
   };
 
+  //handles change in input fields
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value })); //Handle form state immediately
     setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
   };
 

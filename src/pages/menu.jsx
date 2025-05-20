@@ -235,13 +235,14 @@ const Menu = () => {
           value={calorieRange}
           onChange={handleCalorieRangeChange}
           className="w-48 py-3 px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-        >
-          <option value="all">All Calories</option>
-          <option value="0-200">0 - 200 kcal</option>
-          <option value="201-400">201 - 400 kcal</option>
-          <option value="401-600">401 - 600 kcal</option>
-          <option value="601-800">601 - 800 kcal</option>
-          <option value="801">Above 800 kcal</option>
+          >
+            <option value="all">All</option>
+              <option value="100-150">100 - 150 kcal / 100g</option>
+              <option value="151-200">151 - 200 kcal / 100g</option>
+              <option value="201-300">201 - 300 kcal / 100g</option>
+              <option value="301-400">301 - 400 kcal / 100g</option>
+              <option value="401">Above 400 kcal / 100g</option>
+
         </select>
       </div>
 
