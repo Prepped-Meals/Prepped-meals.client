@@ -23,10 +23,11 @@ const CustomerProfile = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+  const [showPendingOrdersModal, setShowPendingOrdersModal] = useState(false);
   const { logout } = useAuth(); 
   const navigate = useNavigate(); 
 
-  // Validation functions (same as SignUp)
+  // Validation functions
   const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
   const validatePhone = (phone) => /^\d{10}$/.test(phone);
 
@@ -109,10 +110,9 @@ const CustomerProfile = () => {
   };
 
   const handleSave = async () => {
-    // Final validation before submission
     const validationErrors = {};
     Object.entries(profileData).forEach(([name, value]) => {
-      if (name !== 'profilePic') { // Skip profilePic validation
+      if (name !== 'profilePic') {
         const error = validateField(name, value);
         if (error) validationErrors[name] = error;
       }
@@ -165,7 +165,25 @@ const CustomerProfile = () => {
   };
 
   const handleDeleteAccount = async () => {
-    setShowDeleteConfirm(true);
+    try {
+      // First check for pending orders
+      const response = await fetch("http://localhost:8000/api/customers/me/pending-orders", {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) throw new Error("Failed to check pending orders");
+      
+      const data = await response.json();
+      
+      if (data.hasPendingOrders) {
+        setShowPendingOrdersModal(true);
+      } else {
+        setShowDeleteConfirm(true);
+      }
+    } catch (err) {
+      console.error("Error checking pending orders:", err.message);
+      alert("Failed to check pending orders. Please try again.");
+    }
   };
 
   const confirmDeleteAccount = async () => {
@@ -174,13 +192,24 @@ const CustomerProfile = () => {
         method: "DELETE",
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Could not delete");
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Failed to delete account.");
+        setShowDeleteConfirm(false);
+        return;
+      }
 
       setShowDeleteConfirm(false);
       setShowDeleteSuccess(true);
+      setTimeout(() => {
+        logout();
+        navigate("/");
+      }, 2000);
     } catch (err) {
-      console.error(err.message);
-      alert("Could not delete account.");
+      console.error("Error deleting account:", err.message);
+      alert("Something went wrong.");
     }
   };
 
@@ -461,6 +490,24 @@ const CustomerProfile = () => {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Orders Modal */}
+      {showPendingOrdersModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-72 text-center">
+            <h2 className="text-lg font-semibold mb-4 text-red-600">Pending Orders</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              You have pending orders. Please complete them before deleting your account.
+            </p>
+            <button
+              onClick={() => setShowPendingOrdersModal(false)}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
