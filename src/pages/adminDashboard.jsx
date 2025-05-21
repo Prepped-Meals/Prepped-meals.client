@@ -3,12 +3,9 @@ import SidebarAdmin from '../components/sidebarAdmin';
 import HeaderAdmin from '../components/headerAdmin';
 import dashImage from "../assets/images/meallsss.jpg";
 import { FaUsers, FaUtensils, FaShoppingBag, FaDollarSign} from 'react-icons/fa';
-import { Line, Bar} from 'react-chartjs-2';
-import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
-import { FiTrendingUp } from 'react-icons/fi';
-import { BsGraphUp, BsThreeDotsVertical } from 'react-icons/bs';
+import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale, BarElement, Title, ArcElement } from 'chart.js';
 import { END_POINTS } from '../api/endPoints';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
 
 ChartJS.register(
@@ -18,8 +15,6 @@ ChartJS.register(
   CategoryScale,
   BarElement,
   Title,
-  Tooltip,
-  Legend,
   ArcElement
 );
 
@@ -277,7 +272,7 @@ const DashboardAdmin = () => {
                           />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <RechartsTooltip />
                       <Legend verticalAlign="bottom" height={36} />
                     </PieChart>
                   </ResponsiveContainer>
