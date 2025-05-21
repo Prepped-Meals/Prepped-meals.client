@@ -81,40 +81,39 @@ const MealsAdmin = () => {
             <div className="flex-1 flex flex-col">
                 <HeaderAdmin />
                 <div className="p-6 flex-1">
-                    <h1 className="text-2xl font-bold mb-4 mt-2" style={{ fontFamily: 'Poppins, sans-serif' }}>MEALS</h1>
-
-                    <div className="bg-gray-200 p-4 rounded-lg shadow-md" style={{ minHeight: '80vh' }}>
-                        
-                        {/* Action Buttons Group */}
-                        <div className="flex flex-wrap gap-4 mt-4 mb-6">
-                            <Button onClick={handleAddMealClick} className="bg-green-700 text-white">
+                    <div className="flex justify-between items-center mb-8"> {/* Increased mb-4 to mb-8 for more space */}
+                        <h1 className="text-2xl font-semibold text-gray-800" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                            MEALS
+                        </h1>
+                        <div className="flex items-center gap-4">
+                            <div className="max-w-xs">
+                                <input
+                                    type="text"
+                                    placeholder="Search meals..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                                    aria-label="Search meals"
+                                />
+                            </div>
+                            <Button onClick={handleAddMealClick} className="bg-green-700 text-white hover:bg-green-800">
                                 Add Meals
                             </Button>
                             <Link to={ROUTES.ADMIN_MEALREPORT}>
-                                <Button className="bg-green-700 text-white flex items-center gap-2">
+                                <Button className="bg-green-700 text-white flex items-center gap-2 hover:bg-green-800">
                                     Reports <FiDownload size={18} />
                                 </Button>
                             </Link>
                         </div>
+                    </div>
 
-                        {/* Search bar in a clean container */}
-                        <div className="mb-8 max-w-sm">
-                            <input
-                                type="text"
-                                placeholder="Search meals..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                                aria-label="Search meals"
-                            />
-                        </div>
-
+                    <div className="bg-gray-200 p-6 rounded-lg shadow-md" style={{ minHeight: '80vh' }}> {/* Increased p-4 to p-6 */}
                         {filteredMeals && filteredMeals.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {filteredMeals.map((meal, index) => (
                                     <div
                                         key={meal.meal_id || index}
-                                        className="relative bg-white rounded-xl shadow hover:shadow-md p-4 flex flex-col justify-between transition-all duration-200 cursor-pointer"
+                                        className="relative bg-white rounded-xl shadow hover:shadow-lg p-4 flex flex-col justify-between transition-all duration-200 cursor-pointer hover:bg-green-50" /* Added hover:bg-green-50 */
                                         onClick={() => handleMealCardClick(meal)}
                                     >
                                         {/* Low Stock Badge */}

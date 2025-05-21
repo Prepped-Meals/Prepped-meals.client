@@ -48,6 +48,7 @@ const UpdateMealPopup = ({ meal, onClose, onSubmit }) => {
         if (!value) return 'Stock is required';
         if (isNaN(value)) return 'Must be a number';
         if (parseInt(value) < 0) return 'Cannot be negative';
+        if (parseInt(value) < 1) return 'Enter value greater than 0';
         break;
       case 'mealImage':
         if (value && value.size > 2 * 1024 * 1024) return 'Image must be <2MB';
