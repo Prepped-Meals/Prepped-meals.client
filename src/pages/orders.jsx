@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/authContext";
 import { useGetOrdersByCustomer } from "../hooks/useGetOrders.js";
@@ -6,6 +5,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logo from "../assets/images/logo.png";
 import orderBg from "../assets/images/OrderBG.jpg";
+import { FaClipboardList, FaCalendarAlt, FaFilePdf, FaReceipt } from "react-icons/fa";
+import { MdOutlineSummarize, MdClear } from "react-icons/md";
 
 const Orders = () => {
   const { user } = useAuth();
@@ -20,22 +21,20 @@ const Orders = () => {
   const [reportSummary, setReportSummary] = useState(null);
   const [notification, setNotification] = useState({
     show: false,
-    message: '',
-    type: 'error' // can be 'error' or 'success'
+    message: "",
+    type: "error",
   });
   const today = new Date().toISOString().split("T")[0];
 
-  // Auto-hide notification after 5 seconds
   useEffect(() => {
     if (notification.show) {
       const timer = setTimeout(() => {
-        setNotification({...notification, show: false});
+        setNotification({ ...notification, show: false });
       }, 5000);
       return () => clearTimeout(timer);
     }
   }, [notification]);
 
-  // Function to reset date inputs
   const resetDates = () => {
     setStartDate("");
     setEndDate("");
@@ -44,75 +43,43 @@ const Orders = () => {
   const Notification = () => {
     if (!notification.show) return null;
 
-    const bgColor = notification.type === 'error' ? '#f8d7da' : '#d4edda';
-    const textColor = notification.type === 'error' ? '#721c24' : '#155724';
-    const borderColor = notification.type === 'error' ? '#f5c6cb' : '#c3e6cb';
+    const bgColor = notification.type === "error" ? "bg-red-100 border-red-400 text-red-700" : "bg-green-100 border-green-400 text-green-700";
+    const borderColor = notification.type === "error" ? "border-red-500" : "border-green-500";
 
     return (
-      <div style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        padding: '15px',
-        backgroundColor: bgColor,
-        color: textColor,
-        border: `1px solid ${borderColor}`,
-        borderRadius: '5px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        minWidth: '300px',
-        animation: 'slideIn 0.3s ease-out'
-      }}>
-        <span>{notification.message}</span>
-        <button 
-          onClick={() => setNotification({...notification, show: false})}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: textColor,
-            cursor: 'pointer',
-            marginLeft: '10px',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }}
+      <div className={`fixed top-5 right-5 border ${bgColor} ${borderColor} px-4 py-3 rounded-lg shadow-lg max-w-md z-50 flex justify-between items-center transition-all duration-300 transform translate-x-0`}>
+        <span className="block sm:inline">{notification.message}</span>
+        <button
+          onClick={() => setNotification({ ...notification, show: false })}
+          className="ml-4 text-xl font-bold hover:text-gray-800"
         >
-          ×
+          &times;
         </button>
       </div>
     );
   };
 
-  if (isLoading)
-    return <div style={styles.message}>Loading your orders...</div>;
-  if (isError)
-    return (
-      <div style={styles.message}>
-        Something went wrong while fetching orders.
-      </div>
-    );
-  if (!customerOrders?.data?.length)
-    return <div style={styles.message}>You have no orders yet.</div>;
+  if (isLoading) return <div className="text-center py-10 text-xl text-gray-600">Loading your orders...</div>;
+  if (isError) return <div className="text-center py-10 text-xl text-red-600">Something went wrong while fetching orders.</div>;
+  if (!customerOrders?.data?.length) return <div className="text-center py-10 text-xl text-gray-600">You have no orders yet.</div>;
 
   const validateDates = () => {
     if (!startDate || !endDate) {
       setNotification({
         show: true,
-        message: 'Please select both start and end dates.',
-        type: 'error'
+        message: "Please select both start and end dates.",
+        type: "error",
       });
-      resetDates(); // Clear dates on invalid input
+      resetDates();
       return false;
     }
     if (new Date(startDate) > new Date(endDate)) {
       setNotification({
         show: true,
-        message: 'Start date must be before end date.',
-        type: 'error'
+        message: "Start date must be before end date.",
+        type: "error",
       });
-      resetDates(); // Clear dates on invalid range
+      resetDates();
       return false;
     }
     return true;
@@ -133,10 +100,10 @@ const Orders = () => {
     if (filteredOrders.length === 0) {
       setNotification({
         show: true,
-        message: 'No orders found in the selected date range.',
-        type: 'error'
+        message: "No orders found in the selected date range.",
+        type: "error",
       });
-      resetDates(); // Clear dates when no orders found
+      resetDates();
       return;
     }
 
@@ -165,8 +132,8 @@ const Orders = () => {
 
     setNotification({
       show: true,
-      message: 'Report summary generated successfully!',
-      type: 'success'
+      message: "Report summary generated successfully!",
+      type: "success",
     });
   };
 
@@ -185,10 +152,10 @@ const Orders = () => {
     if (filteredOrders.length === 0) {
       setNotification({
         show: true,
-        message: 'No orders found in the selected date range.',
-        type: 'error'
+        message: "No orders found in the selected date range.",
+        type: "error",
       });
-      resetDates(); // Clear dates when no orders found
+      resetDates();
       return;
     }
 
@@ -282,11 +249,11 @@ const Orders = () => {
 
     setNotification({
       show: true,
-      message: 'PDF report downloaded successfully!',
-      type: 'success'
+      message: "PDF report downloaded successfully!",
+      type: "success",
     });
-    
-    resetDates(); // Clear dates after successful PDF generation
+
+    resetDates();
   };
 
   const generateReceipt = async (order) => {
@@ -395,8 +362,8 @@ const Orders = () => {
 
       setNotification({
         show: true,
-        message: 'Receipt downloaded successfully!',
-        type: 'success'
+        message: "Receipt downloaded successfully!",
+        type: "success",
       });
     };
 
@@ -404,16 +371,29 @@ const Orders = () => {
       console.error("Failed to load logo image.");
       setNotification({
         show: true,
-        message: 'Failed to generate receipt. Please try again.',
-        type: 'error'
+        message: "Failed to generate receipt. Please try again.",
+        type: "error",
       });
     };
   };
 
+  const getStatusStyle = (status) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   return (
     <div
+      className="min-h-screen p-4 md:p-8"
       style={{
-        ...styles.container,
         backgroundImage: `url(${orderBg})`,
         backgroundSize: "cover",
         backgroundAttachment: "fixed",
@@ -422,358 +402,245 @@ const Orders = () => {
       }}
     >
       <Notification />
-      <div
-        style={{
-          backgroundColor: "rgba(255, 255, 255, 0.9)",
-          borderRadius: "10px",
-          padding: "2rem",
-        }}
-      >
-             {/* */}
-      <div
-        style={{
-          backgroundColor: "rgba(255, 255, 255, 0.9)", // semi-transparent white overlay
-          borderRadius: "10px",
-          padding: "2rem",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "32px",
-            fontWeight: "bold",
-            color: "#2c3e50",
-            textAlign: "center",
-            marginBottom: "20px",
-            textTransform: "uppercase",
-            borderBottom: "3px solid #16a085",
-            paddingBottom: "8px",
-          }}
-        >
-          My Orders
-        </h2>
-
-        {/* Report Generator Section */}
-        <div style={styles.reportContainer}>
-          <h3
-            style={{
-              fontSize: "24px",
-              fontWeight: "600",
-              color: "#2c3e50",
-              marginBottom: "10px",
-              textAlign: "center",
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-            }}
-          >
-            📑 Generate Your Payment Report
-          </h3>
-
-          <p
-            style={{
-              backgroundColor: "#eafaf1",
-              borderLeft: "6px solid #16a085",
-              padding: "12px 16px",
-              borderRadius: "8px",
-              fontSize: "16px",
-              color: "#2c3e50",
-              fontWeight: "500",
-              marginBottom: "20px",
-              textAlign: "center",
-            }}
-          >
-            Easily select a date range to{" "}
-            <strong>view your payment summary</strong> and{" "}
-            <strong>download a detailed PDF report</strong> for your records.
-          </p>
-
-          <div style={styles.dateRow}>
-            <div>
-              <label>Start Date:</label>
-              <br />
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                max={today}
-                style={styles.dateInput}
-              />
-            </div>
-            <div>
-              <label>End Date:</label>
-              <br />
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                max={today}
-                style={styles.dateInput}
-              />
-            </div>
+      <div className="bg-white bg-opacity-90 rounded-xl shadow-xl overflow-hidden">
+        <div className="p-6 md:p-8">
+          {/* Page Header */}
+          <div className="text-center mb-10">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+              My Order History
+            </h1>
+            <div className="w-24 h-1 bg-teal-500 mx-auto rounded-full"></div>
           </div>
 
-          <div style={styles.buttonRow}>
-            <button
-              onClick={viewReportSummary}
-              style={{ ...styles.button, backgroundColor: "#16a085" }}
-            >
-              View Report Summary
-            </button>
-            <button onClick={generateWeeklyReport} style={styles.button}>
-              Download PDF Report
-            </button>
-            {reportSummary && (
+          {/* Report Generator Section */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-10 border border-gray-200">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <FaFilePdf className="text-3xl text-teal-600" />
+              <h2 className="text-2xl font-bold text-gray-800">
+                Generate Payment Report
+              </h2>
+            </div>
+
+            <div className="bg-teal-50 border-l-4 border-teal-500 p-4 mb-6 rounded">
+              <p className="text-gray-700">
+                Select a date range to view your payment summary and download a
+                detailed PDF report for your records.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaCalendarAlt className="text-gray-400" />
+                  </div>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    max={today}
+                    className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 py-2 border"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Date
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaCalendarAlt className="text-gray-400" />
+                  </div>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    max={today}
+                    className="pl-10 w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 py-2 border"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 justify-center mb-6">
               <button
-                onClick={() => {
-                  setReportSummary(null);
-                  resetDates(); // Clear dates when clearing summary
-                }}
-                style={{ ...styles.button, backgroundColor: "#16a085" }}
+                onClick={viewReportSummary}
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md transition-colors duration-200"
               >
-                Clear Summary
+                <MdOutlineSummarize />
+                View Summary
               </button>
+              <button
+                onClick={generateWeeklyReport}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200"
+              >
+                <FaFilePdf />
+                Download PDF
+              </button>
+              {reportSummary && (
+                <button
+                  onClick={() => {
+                    setReportSummary(null);
+                    resetDates();
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors duration-200"
+                >
+                  <MdClear />
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* Summary Display */}
+            {reportSummary && (
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <MdOutlineSummarize className="text-teal-600" />
+                  Report Summary
+                </h3>
+                <div className="space-y-2 mb-3">
+                  {Object.entries(reportSummary.mealSummary).map(
+                    ([meal, details]) => (
+                      <div
+                        key={meal}
+                        className="flex justify-between border-b border-gray-100 pb-2"
+                      >
+                        <span className="font-medium">{meal}</span>
+                        <span>
+                          {details.quantity} × Rs. {details.price.toFixed(2)} ={" "}
+                          <span className="font-semibold">
+                            Rs. {details.totalPrice.toFixed(2)}
+                          </span>
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+                <div className="pt-2 border-t border-gray-200 font-bold text-lg">
+                  Total Spent: Rs. {reportSummary.total.toFixed(2)}
+                </div>
+              </div>
             )}
           </div>
 
-          {/* Summary Display */}
-          {reportSummary && (
-            <div style={styles.summaryBox}>
-              <h4 style={{ marginBottom: "0.5rem", color: "#2c3e50" }}>
-                Report Summary
-              </h4>
-              <ul>
-                {Object.entries(reportSummary.mealSummary).map(
-                  ([meal, details]) => (
-                    <li key={meal}>
-                      {meal} — {details.quantity} x Rs.{" "}
-                      {details.price.toFixed(2)} = Rs.{" "}
-                      {details.totalPrice.toFixed(2)}
-                    </li>
-                  )
-                )}
-              </ul>
-              <p>
-                <strong>Total Spent:</strong> Rs.{" "}
-                {reportSummary.total.toFixed(2)}
-              </p>
+          {/* Order History Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <FaClipboardList className="text-3xl text-teal-600" />
+              <h2 className="text-2xl font-bold text-gray-800">
+                Your Order History
+              </h2>
             </div>
-          )}
-        </div>
-        <h3
-          style={{
-            fontSize: "24px",
-            fontWeight: "600",
-            color: "#2c3e50",
-            marginTop: "40px",
-            marginBottom: "20px",
-            borderBottom: "2px solid #16a085",
-            paddingBottom: "8px",
-            textAlign: "center",
-            textTransform: "uppercase",
-            letterSpacing: "1px",
-          }}
-        >
-          🗂️ Order History
-        </h3>
 
-        {/* Order Cards */}
-        <div style={styles.ordersList}>
-          {customerOrders.data.map((order) => (
-            <div key={order._id} style={styles.orderCard}>
-              <h3 style={styles.orderId}>Order ID: {order._id}</h3>
-              <p>
-                <strong>Status:</strong>{" "}
-                <span style={styles.getStatusStyle(order.order_status)}>
-                  {order.order_status}
-                </span>
-              </p>
-              <p>
-                <strong>Billing Date:</strong>{" "}
-                {new Date(order.order_received_date).toLocaleDateString()}
-              </p>
+            <div className="grid grid-cols-1 gap-6">
+              {customerOrders.data.map((order) => (
+                <div
+                  key={order._id}
+                  className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-200"
+                >
+                  <div className="p-6">
+                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800">
+                          Order #: {order._id}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm text-gray-600">Status:</span>
+                          <span
+                            className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusStyle(
+                              order.order_status
+                            )}`}
+                          >
+                            {order.order_status}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">
+                          Ordered on:{" "}
+                          {new Date(
+                            order.order_received_date
+                          ).toLocaleDateString()}
+                        </p>
+                        <p className="text-lg font-bold text-teal-600 mt-1">
+                          Rs. {order.payment?.payment_amount}
+                        </p>
+                      </div>
+                    </div>
 
-              <div style={styles.paymentDetailsSection}>
-                <h4>Payment Details</h4>
-                <p>
-                  <strong>Name & Address:</strong> {order.payment?.address}
-                </p>
-                <p>
-                  <strong>Phone:</strong> {order.payment?.phone_number}
-                </p>
-                <p>
-                  <strong>Amount:</strong> Rs. {order.payment?.payment_amount}
-                </p>
-                <p>
-                  <strong>Payment Type:</strong> {order.payment?.payment_type}
-                </p>
-              </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-gray-700 mb-3 border-b pb-2">
+                          Payment Details
+                        </h4>
+                        <div className="space-y-2">
+                          <p>
+                            <span className="font-medium">Name & Address:</span>{" "}
+                            <span className="text-gray-600">
+                              {order.payment?.address || "N/A"}
+                            </span>
+                          </p>
+                          <p>
+                            <span className="font-medium">Phone:</span>{" "}
+                            <span className="text-gray-600">
+                              {order.payment?.phone_number || "N/A"}
+                            </span>
+                          </p>
+                          <p>
+                            <span className="font-medium">Payment Type:</span>{" "}
+                            <span className="text-gray-600">
+                              {order.payment?.payment_type || "N/A"}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
 
-              <div style={styles.cartItemsSection}>
-                <h4>Cart Items</h4>
-                <ul style={styles.cartList}>
-                  {order.cart_items.map((item, idx) => (
-                    <li key={idx} style={styles.cartItem}>
-                      {item.meal_name} — {item.quantity} x Rs. {item.meal_price}{" "}
-                      = Rs. {item.total_price}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-gray-700 mb-3 border-b pb-2">
+                          Ordered Items
+                        </h4>
+                        <ul className="space-y-2">
+                          {order.cart_items.map((item, idx) => (
+                            <li
+                              key={idx}
+                              className="flex justify-between border-b border-gray-100 pb-2"
+                            >
+                              <span className="font-medium">
+                                {item.meal_name}
+                              </span>
+                              <span>
+                                {item.quantity} × Rs. {item.meal_price} ={" "}
+                                <span className="font-semibold">
+                                  Rs. {item.total_price}
+                                </span>
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
 
-              <button
-                onClick={() => generateReceipt(order)}
-                style={styles.buttonSmall}
-              >
-                Generate Receipt
-              </button>
+                    <div className="mt-6 flex justify-end">
+                      <button
+                        onClick={() => generateReceipt(order)}
+                        className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md transition-colors duration-200"
+                      >
+                        <FaReceipt />
+                        Download Receipt
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 };
 
-const styles = {
-  container: {
-    padding: "2rem",
-    minHeight: "100vh",
-  },
-  title: {
-    marginBottom: "1.5rem",
-    fontSize: "2rem",
-    color: "#2c3e50",
-    fontFamily: "'Playfair Display', serif",
-  },
-  reportContainer: {
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    padding: "1.5rem",
-    backgroundColor: "#ffffff",
-    marginBottom: "2rem",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-  },
-  sectionTitle: {
-    fontSize: "1.25rem",
-    marginBottom: "1rem",
-    color: "#2980b9",
-  },
-  dateRow: {
-    display: "flex",
-    gap: "1rem",
-    marginBottom: "1rem",
-  },
-  buttonRow: {
-    display: "flex",
-    gap: "1rem",
-    marginBottom: "1rem",
-  },
-  summaryBox: {
-    backgroundColor: "#ecf0f1",
-    padding: "1rem",
-    borderRadius: "8px",
-    fontSize: "1rem",
-  },
-  ordersList: {
-    display: "grid",
-    gap: "1.5rem",
-  },
-  orderCard: {
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    padding: "1.5rem",
-    backgroundColor: "#ffffff",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-    fontFamily: "'Lora', serif",
-  },
-  orderId: {
-    marginBottom: "0.5rem",
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-    color: "#34495e",
-  },
-  paymentDetailsSection: {
-    marginTop: "1rem",
-    padding: "1rem",
-    backgroundColor: "#e7f3fe",
-    borderRadius: "8px",
-  },
-  cartItemsSection: {
-    marginTop: "1rem",
-    padding: "1rem",
-    backgroundColor: "#fff8e1",
-    borderRadius: "8px",
-  },
-  cartList: {
-    paddingLeft: "1.5rem",
-  },
-  cartItem: {
-    marginBottom: "0.5rem",
-    fontSize: "1rem",
-    color: "#555",
-  },
-  message: {
-    textAlign: "center",
-    fontSize: "1.2rem",
-    color: "#555",
-    padding: "20px",
-  },
-  button: {
-    padding: "10px 20px",
-    backgroundColor: "#2980b9",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontSize: "1rem",
-  },
-  buttonSmall: {
-    marginTop: "1rem",
-    padding: "8px 16px",
-    backgroundColor: "#27ae60",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontSize: "0.9rem",
-  },
-  // eslint-disable-next-line
-  ordersList: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: "20px",
-    padding: "10px",
-  },
-  // eslint-disable-next-line
-  orderCard: {
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    padding: "1.5rem",
-    backgroundColor: "#ffffff",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-    fontFamily: "'Lora', serif",
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  getStatusStyle: (status) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return { color: "#f39c12", fontWeight: "bold" };
-      case "completed":
-        return { color: "#27ae60", fontWeight: "bold" };
-      case "cancelled":
-        return { color: "#e74c3c", fontWeight: "bold" };
-      default:
-        return { color: "#333" };
-    }
-  },
-  dateInput: {
-    padding: "8px",
-    borderRadius: "5px",
-    border: "1px solid #ccc",
-    fontSize: "1rem",
-  },
-};
-
 export default Orders;
-
