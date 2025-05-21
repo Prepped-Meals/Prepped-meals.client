@@ -147,7 +147,7 @@ const AdminPaymentPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-blue-50 to-indigo-50">
+    <div className="flex min-h-screen bg-gradient-to-b from-green-50 to-green-50">
       {/* Sidebar */}
       <SidebarAdmin />
 
@@ -161,10 +161,10 @@ const AdminPaymentPage = () => {
           {/* Title and Action */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+              <h1 className="text-4xl font-bold text-gray-800 mb-2 bg-clip-text text-transparent bg-gradient-to-r from-green-800 to-green-600">
                 Weekly Payment Dashboard
               </h1>
-              <p className="text-lg text-gray-600 max-w-2xl">
+              <p className="text-lg text-gray-600 max-w-2xl font-serif">
                 Comprehensive insights into customer payment activities.
                 <span className="block text-sm text-gray-400 mt-1">
                   Last updated: {new Date().toLocaleDateString()}
@@ -173,7 +173,7 @@ const AdminPaymentPage = () => {
             </div>
             <button
               onClick={generatePDF}
-              className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+              className="flex items-center px-6 py-3 bg-gradient-to-r from-green-800 to-green-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
             >
               <svg
                 className="w-5 h-5 mr-2"
@@ -196,36 +196,36 @@ const AdminPaymentPage = () => {
           <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 hover:shadow-xl transition-all">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="flex-1">
-                <h2 className="text-3xl font-bold text-gray-800 mb-3">
+                <h2 className="text-3xl font-bold text-gray-800 mb-3 font-sans">
                   Payment Insights
                 </h2>
-                <p className="text-gray-600 text-lg mb-4">
+                <p className="text-gray-600 text-lg mb-4 font-serif">
                   Explore key payment metrics and customer behaviors. Click the
                   view buttons below to reveal specific insights.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <button
                     onClick={() => setShowTopCustomers(!showTopCustomers)}
-                    className="px-5 py-2.5 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition-colors"
+                    className="px-5 py-2.5 bg-green-100 text-green-700 rounded-lg font-medium hover:bg-green-300 transition-colors"
                   >
                     {showTopCustomers ? "Hide" : "View"} Top Customers
                   </button>
                   <button
                     onClick={() => setShowPaymentMethod(!showPaymentMethod)}
-                    className="px-5 py-2.5 bg-purple-100 text-purple-700 rounded-lg font-medium hover:bg-purple-200 transition-colors"
+                    className="px-5 py-2.5 bg-green-100 text-green-700 rounded-lg font-medium hover:bg-green-300 transition-colors"
                   >
                     {showPaymentMethod ? "Hide" : "View"} Payment Method
                   </button>
                   <button
                     onClick={() => setShowBusiestDay(!showBusiestDay)}
-                    className="px-5 py-2.5 bg-indigo-100 text-indigo-700 rounded-lg font-medium hover:bg-indigo-200 transition-colors"
+                    className="px-5 py-2.5 bg-green-100 text-green-700 rounded-lg font-medium hover:bg-green-300 transition-colors"
                   >
                     {showBusiestDay ? "Hide" : "View"} Busiest Day
                   </button>
                 </div>
               </div>
               <div className="hidden md:block">
-                <div className="w-64 h-64 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-inner">
+                <div className="w-64 h-64 bg-gradient-to-br from-green-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-inner">
                   <svg
                     className="w-32 h-32 text-white opacity-90"
                     fill="none"

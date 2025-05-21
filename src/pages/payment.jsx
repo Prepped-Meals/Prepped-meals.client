@@ -270,8 +270,9 @@ const Payment = () => {
           Checkout & Payment
         </h1>
 
-        <div className="flex flex-raw gap-2 pb-5">
-          <label className="flex items-center gap-3 text-green-900">
+        <div className="flex flex-row gap-6 pb-5">
+          {/* Gift Checkbox */}
+          <label className="relative flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
               checked={isGift}
@@ -282,10 +283,50 @@ const Payment = () => {
                 setCheckboxError(false);
               }}
               disabled={sendToMyself}
+              className="sr-only peer" // Hide default checkbox
             />
-            Send as a Gift
+            <div
+              className={`
+      w-5 h-5 rounded-md border-2 transition-all duration-200
+      ${
+        sendToMyself
+          ? "border-gray-300 bg-gray-100"
+          : "border-green-600 group-hover:border-green-700"
+      }
+      ${isGift ? "bg-green-600 border-green-600" : "bg-white"}
+      flex items-center justify-center
+    `}
+            >
+              {isGift && (
+                <svg
+                  className="w-3 h-3 text-white"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+            </div>
+            <span
+              className={`
+      text-sm font-medium transition-colors
+      ${
+        sendToMyself
+          ? "text-gray-400"
+          : "text-green-700 group-hover:text-green-800"
+      }
+    `}
+            >
+              Send as a Gift
+            </span>
           </label>
-          <label className="flex items-center gap-3 text-green-900">
+
+          {/* Myself Checkbox */}
+          <label className="relative flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
               checked={sendToMyself}
@@ -296,8 +337,42 @@ const Payment = () => {
                 setCheckboxError(false);
               }}
               disabled={isGift}
+              className="sr-only peer" // Hide default checkbox
             />
-            Send to Myself
+            <div
+              className={`
+      w-5 h-5 rounded-md border-2 transition-all duration-200
+      ${
+        isGift
+          ? "border-gray-300 bg-gray-100"
+          : "border-green-600 group-hover:border-green-700"
+      }
+      ${sendToMyself ? "bg-green-600 border-green-600" : "bg-white"}
+      flex items-center justify-center
+    `}
+            >
+              {sendToMyself && (
+                <svg
+                  className="w-3 h-3 text-white"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+            </div>
+            <span
+              className={`
+      text-sm font-medium transition-colors
+      ${isGift ? "text-gray-400" : "text-green-700 group-hover:text-green-800"}
+    `}
+            >
+              Send to Myself
+            </span>
           </label>
         </div>
         {checkboxError && (
