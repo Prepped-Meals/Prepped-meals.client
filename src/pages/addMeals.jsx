@@ -55,6 +55,7 @@ const AddMeals = () => {
         if (!value) return 'Stock is required';
         if (isNaN(value)) return 'Must be a number';
         if (parseInt(value) < 0) return 'Cannot be negative';
+        if (parseInt(value) < 1) return 'Enter value more than 0';
         break;
       case 'meal_image':
         if (!value) return 'Image is required';
