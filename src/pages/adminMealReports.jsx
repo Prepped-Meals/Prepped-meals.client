@@ -236,7 +236,7 @@ const AdminMealReports = () => {
                                             <h3 className="text-lg font-medium text-gray-700 mb-4">Stock Levels</h3>
                                             <div className="mb-4 flex items-center gap-4">
                                                 <div className="flex items-center">
-                                                    <div className="w-4 h-4 bg-purple-600 mr-2"></div>
+                                                    <div className="w-4 h-4 bg-blue-200 mr-2"></div>
                                                     <span className="text-sm">Low Stock (4-9)</span>
                                                 </div>
                                                 <div className="flex items-center">
@@ -245,7 +245,7 @@ const AdminMealReports = () => {
                                                 </div>
                                             </div>
                                             <div style={{ width: '100%', height: 400 }}>
-                                                <ResponsiveContainer>
+                                                <ResponsiveContainer> 
                                                     <BarChart
                                                         data={filteredLowStockMeals}
                                                         margin={{ top: 20, right: 30, left: 40, bottom: 20 }}
@@ -276,7 +276,7 @@ const AdminMealReports = () => {
                                                             {filteredLowStockMeals.map((entry, index) => (
                                                                 <Cell
                                                                     key={`cell-${index}`}
-                                                                    fill={entry.meal_stock < 4 ? '#ef4444' : '#9333ea'}
+                                                                    fill={entry.meal_stock < 4 ? '#ef4444' : '#89CFF0'}
                                                                 />
                                                             ))}
                                                         </Bar>

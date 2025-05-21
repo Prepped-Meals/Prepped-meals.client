@@ -2,14 +2,30 @@ import React, { useEffect, useState } from 'react';
 import SidebarAdmin from '../components/sidebarAdmin';
 import HeaderAdmin from '../components/headerAdmin';
 import dashImage from "../assets/images/meallsss.jpg";
-import { FaUsers, FaUtensils, FaShoppingBag, FaDollarSign } from 'react-icons/fa';
-import axios from 'axios';
+import { FaUsers, FaUtensils, FaShoppingBag, FaDollarSign} from 'react-icons/fa';
+import { Line, Bar} from 'react-chartjs-2';
+import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+import { FiTrendingUp } from 'react-icons/fi';
+import { BsGraphUp, BsThreeDotsVertical } from 'react-icons/bs';
 import { END_POINTS } from '../api/endPoints';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import axios from 'axios';
+
+ChartJS.register(
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 const DashboardAdmin = () => {
   const [summary, setSummary] = useState({
-    totalMeals: 0,
+    totalMeals: 14, 
     totalOrders: 0,
     totalCustomers: 0,
     totalRevenue: 0,

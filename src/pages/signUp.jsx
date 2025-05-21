@@ -75,6 +75,7 @@ function SignUp() {
     return error;
   };
 
+  //Real time validation
   // Handle input changes and validations
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -84,6 +85,7 @@ function SignUp() {
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
+  //validate on blur
   const handleBlur = (e) => {
     const { name, value } = e.target;
     const error = validateField(name, value);
