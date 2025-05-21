@@ -1,8 +1,9 @@
-import { Link} from "react-router-dom";
-import { useState} from "react";
-import { FiHome, FiHeart, FiClipboard, FiUsers, FiLogOut, FiMessageCircle, FiCreditCard, FiPackage} from "react-icons/fi";
+import { Link } from "react-router-dom";
+import { useState } from "react";
+import { FiHome, FiHeart, FiClipboard, FiUsers, FiLogOut, FiMessageCircle, FiCreditCard, FiPackage } from "react-icons/fi";
 import profilePic from '../assets/images/pro.png';
 import { ROUTES } from "../routes/paths";
+
 const SidebarAdmin = () => {
     const [profileImage, setProfileImage] = useState(profilePic);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -18,7 +19,6 @@ const SidebarAdmin = () => {
         { name: "Logout", icon: <FiLogOut size={20} />, path: "#", action: () => setShowLogoutConfirm(true) },
     ];
 
-    //handle image upload
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -35,7 +35,10 @@ const SidebarAdmin = () => {
     };
 
     return (
-        <div className="min-h-screen w-64 bg-green-100 p-4 flex flex-col items-center">
+        <div 
+          className="sticky top-0 bg-green-100 p-4 flex flex-col items-center" 
+          style={{ height: 'calc(100vh - 0px)', overflowY: 'auto', minHeight: '100px', width: '16rem' }}
+        >
             {/* Profile Section */}
             <div className="flex flex-col items-center mb-6">
                 <label htmlFor="profile-upload" className="cursor-pointer">

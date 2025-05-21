@@ -7,6 +7,7 @@ import { useFetchMeals } from '../hooks/useFetchMeals';
 import HeaderAdmin from '../components/headerAdmin'; 
 import MealPopup from '../components/mealpopup';
 import UpdateMealPopup from '../components/updateMealpop';
+import { FiDownload } from "react-icons/fi";
 
 const MealsAdmin = () => {
     const aNavigate = useNavigate();
@@ -17,6 +18,9 @@ const MealsAdmin = () => {
     const [showUpdatePopup, setShowUpdatePopup] = React.useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
     const [showDeleteSuccess, setShowDeleteSuccess] = React.useState(false);
+
+    // New state for search input
+    const [searchTerm, setSearchTerm] = React.useState("");
 
     const handleAddMealClick = () => {
         console.log("Add meals button clicked");
@@ -66,6 +70,11 @@ const MealsAdmin = () => {
     if (isLoading) return <p>Loading meals...</p>;
     if (isError) return <p>Error fetching meals</p>;
 
+    // Filter meals by search term (case-insensitive)
+    const filteredMeals = meals.filter(meal =>
+        meal.meal_name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             <SidebarAdmin />
@@ -75,44 +84,67 @@ const MealsAdmin = () => {
                     <h1 className="text-2xl font-bold mb-4 mt-2" style={{ fontFamily: 'Poppins, sans-serif' }}>MEALS</h1>
 
                     <div className="bg-gray-200 p-4 rounded-lg shadow-md" style={{ minHeight: '80vh' }}>
-                        <div className="flex gap-4 flex-wrap">
-                            <Button onClick={handleAddMealClick} className="bg-green-700 text-white mt-4">Add Meals</Button>
+                        
+                        {/* Action Buttons Group */}
+                        <div className="flex flex-wrap gap-4 mt-4 mb-6">
+                            <Button onClick={handleAddMealClick} className="bg-green-700 text-white">
+                                Add Meals
+                            </Button>
                             <Link to={ROUTES.ADMIN_MEALREPORT}>
-                                <Button className="bg-green-700 text-white mt-4">Reports</Button>
+                                <Button className="bg-green-700 text-white flex items-center gap-2">
+                                    Reports <FiDownload size={18} />
+                                </Button>
                             </Link>
                         </div>
 
-                        <h1 className="text-xl font-bold mb-4 mt-10">MEALS ADDED</h1>
+                        {/* Search bar in a clean container */}
+                        <div className="mb-8 max-w-sm">
+                            <input
+                                type="text"
+                                placeholder="Search meals..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                                aria-label="Search meals"
+                            />
+                        </div>
 
-                        {meals && meals.length > 0 ? (
+                        {filteredMeals && filteredMeals.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                {meals.map((meal, index) => (
+                                {filteredMeals.map((meal, index) => (
                                     <div
                                         key={meal.meal_id || index}
-                                        className="relative bg-white rounded-xl shadow-md p-4 flex flex-col items-center"
+                                        className="relative bg-white rounded-xl shadow hover:shadow-md p-4 flex flex-col justify-between transition-all duration-200 cursor-pointer"
                                         onClick={() => handleMealCardClick(meal)}
                                     >
-                                        {/* Low stock badge with left count */}
+                                        {/* Low Stock Badge */}
                                         {meal.meal_stock !== undefined && meal.meal_stock < 10 && (
-                                            <div className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-md shadow">
-                                                Low Stock ({meal.meal_stock} left)
+                                            <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-semibold px-2 py-0.5 rounded shadow">
+                                                Low Stock ({meal.meal_stock})
                                             </div>
                                         )}
 
+                                        {/* Meal Image */}
                                         <img
                                             src={meal.meal_image || 'https://via.placeholder.com/150'}
                                             alt={meal.meal_name || 'Meal Image'}
-                                            className="rounded-lg mb-4 w-full h-40 object-cover"
+                                            className="rounded-lg mb-3 w-full h-40 object-cover"
                                         />
-                                        <p className="text-sm font-semibold text-gray-600">#{meal.meal_id || 'N/A'}</p>
-                                        <h2 className="text-lg font-bold mb-1">{meal.meal_name || 'Unnamed Meal'}</h2>
-                                        <p className="text-gray-800">Rs. {meal.meal_price || 'Price not available'}</p>
-                                        <p className="text-sm text-gray-500 text-center whitespace-pre-line">{meal.meal_description || 'No description available'}</p>
+
+                                        {/* Meal Info */}
+                                        <div className="text-center">
+                                            <p className="text-xs text-gray-500 mb-1">ID: #{meal.meal_id}</p>
+                                            <h2 className="text-md font-semibold mb-1">{meal.meal_name || 'Unnamed Meal'}</h2>
+                                            <p className="text-sm text-gray-700 mb-1">Rs. {meal.meal_price || 'N/A'}</p>
+                                            <p className="text-xs text-gray-500 line-clamp-2 whitespace-pre-line">
+                                                {meal.meal_description || 'No description available'}
+                                            </p>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-gray-500 mt-4">No meals added yet.</p>
+                            <p className="text-gray-500 mt-4">No meals found.</p>
                         )}
                     </div>
                 </div>
@@ -140,7 +172,6 @@ const MealsAdmin = () => {
                     />
                 )}
 
-                {/* Delete Confirmation Modal */}
                 {showDeleteConfirm && (
                     <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
                         <div className="bg-white rounded-lg shadow-lg p-6 w-72 text-center">
@@ -163,7 +194,6 @@ const MealsAdmin = () => {
                     </div>
                 )}
 
-                {/* Delete Success Modal */}
                 {showDeleteSuccess && (
                     <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
                         <div className="bg-white rounded-lg shadow-lg p-4 w-72 text-center">
@@ -171,7 +201,7 @@ const MealsAdmin = () => {
                             <button
                                 onClick={() => {
                                     setShowDeleteSuccess(false);
-                                    window.location.reload(); // optional: refresh after dismiss
+                                    window.location.reload();
                                 }}
                                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
                             >
