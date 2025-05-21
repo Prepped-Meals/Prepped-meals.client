@@ -372,7 +372,7 @@ const Menu = () => {
 
                     {isExpanded && (
                       <div className="mb-3">
-                        <p className="text-gray-600 text-sm mb-2">{meal.meal_description}</p>
+                        <p className="text-gray-600 text-sm mb-2 whitespace-pre-line">{meal.meal_description}</p>
                         <div className="text-xs text-gray-500">
                           {/* <span>Available: {meal.meal_stock}</span> */}
                         </div>

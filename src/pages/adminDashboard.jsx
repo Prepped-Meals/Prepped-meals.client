@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import SidebarAdmin from '../components/sidebarAdmin';
 import HeaderAdmin from '../components/headerAdmin';
 import dashImage from "../assets/images/meallsss.jpg";
-import { FaUsers, FaUtensils, FaShoppingBag, FaDollarSign} from 'react-icons/fa';
+import { FaUsers, FaUtensils, FaShoppingBag, FaDollarSign } from 'react-icons/fa';
+import { GiMuscleUp, GiRunningShoe, GiWeightLiftingUp, GiMeal } from 'react-icons/gi';
 import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale, BarElement, Title, ArcElement } from 'chart.js';
 import { END_POINTS } from '../api/endPoints';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -30,7 +31,7 @@ const DashboardAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [orderStatusData, setOrderStatusData] = useState([]);
-
+  const [calorieSegments, setCalorieSegments] = useState([]);
 
   const calculateTotalRevenue = (orders) => {
     if (!Array.isArray(orders)) return 0;
@@ -99,6 +100,76 @@ const DashboardAdmin = () => {
     }));
   };
 
+  const getCalorieSegments = (orders, meals) => {
+    if (!Array.isArray(orders) || !Array.isArray(meals)) return [];
+    
+    const mealCalories = {};
+    meals.forEach(meal => {
+      mealCalories[meal.meal_name] = meal.calorie_count || 0;
+    });
+
+    const customerCalories = {};
+    
+    orders.forEach(order => {
+      const customerId = order.customer?._id || order.customer;
+      if (!customerId) {
+        console.warn('Order missing customer:', order._id);
+        return;
+      }
+      
+      let totalCalories = 0;
+      let totalItems = 0;
+      
+      if (Array.isArray(order.cart_items)) {
+        order.cart_items.forEach(item => {
+          const calories = mealCalories[item.meal_name] || 0;
+          totalCalories += calories * (item.quantity || 1);
+          totalItems += item.quantity || 1;
+        });
+      }
+      
+      
+      const avgCalories = totalItems > 0 ? Math.round(totalCalories / totalItems) : 0;
+      
+      if (!customerCalories[customerId]) {
+        customerCalories[customerId] = {
+          totalCalories: 0,
+          totalOrders: 0,
+          avgCalories: 0
+        };
+      }
+      
+      customerCalories[customerId].totalCalories += totalCalories;
+      customerCalories[customerId].totalOrders += 1;
+      customerCalories[customerId].avgCalories = 
+        Math.round(customerCalories[customerId].totalCalories / 
+        customerCalories[customerId].totalOrders);
+    });
+
+    const segments = {
+      'Weight Loss': { count: 0, icon: <GiMeal className="text-blue-500" />, range: 'Under 500', description: 'Customers focusing on weight loss' },
+      'Maintenance': { count: 0, icon: <GiRunningShoe className="text-green-500" />, range: '500-800', description: 'Customers maintaining weight' },
+      'Muscle Gain': { count: 0, icon: <GiMuscleUp className="text-purple-500" />, range: '800-1000', description: 'Customers building muscle' },
+      'Athletes': { count: 0, icon: <GiWeightLiftingUp className="text-red-500" />, range: '1000+', description: 'High-performance athletes' }
+    };
+
+    Object.values(customerCalories).forEach(customer => {
+      const avg = customer.avgCalories;
+      if (avg < 500) segments['Weight Loss'].count++;
+      else if (avg >= 500 && avg < 800) segments['Maintenance'].count++;
+      else if (avg >= 800 && avg < 1000) segments['Muscle Gain'].count++;
+      else if (avg >= 1000) segments['Athletes'].count++;
+    });
+
+    return Object.entries(segments).map(([name, data]) => ({
+      name,
+      count: data.count,
+      icon: data.icon,
+      range: data.range,
+      description: data.description,
+    }));
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -119,6 +190,7 @@ const DashboardAdmin = () => {
         const popularMeals = getTopMeals(ordersData, meals);
         const totalMealsCount = Array.isArray(meals) ? meals.length : 0;
         const statusData = getOrderStatusCounts(ordersData);
+        const segments = getCalorieSegments(ordersData, meals);
 
         setSummary({
           totalMeals: totalMealsCount,
@@ -130,6 +202,7 @@ const DashboardAdmin = () => {
         setTopMeals(popularMeals);
         setOrders(ordersData);
         setOrderStatusData(statusData);
+        setCalorieSegments(segments);
       } catch (err) {
         setError(err.message || 'Failed to fetch dashboard data');
         console.error('Error fetching dashboard data:', err);
@@ -324,6 +397,33 @@ const DashboardAdmin = () => {
                   </table>
                 )}
               </div>
+            </div>
+          </section>
+
+          {/* Customer Nutrition Goals */}
+          <section className="bg-white rounded-2xl p-6 shadow-lg">
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">Customer Nutrition Goals</h2>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {calorieSegments.length > 0 ? (
+                calorieSegments.map((segment, index) => (
+                  <div key={index} className="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md transition">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-white rounded-full shadow-sm">
+                        {segment.icon}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-800">{segment.name}</h3>
+                        <p className="text-xs text-gray-500">{segment.range} kcal/meal</p>
+                      </div>
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900 mb-1">{segment.count} customers</p>
+                    <p className="text-xs text-gray-500">{segment.description}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 col-span-4 text-center py-4">No customer nutrition data available</p>
+              )}
             </div>
           </section>
 
