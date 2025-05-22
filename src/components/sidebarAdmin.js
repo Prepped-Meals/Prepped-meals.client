@@ -51,7 +51,7 @@ const SidebarAdmin = () => {
       )}
 
       <div
-        className="sticky top-0 bg-green-100 p-4 flex flex-col items-center z-10"
+        className="sticky top-0 bg-[#d2e3d0] p-4 flex flex-col items-center z-10"
         style={{ height: "100vh", overflowY: "auto", minHeight: "100px", width: "16rem" }}
       >
         {/* Profile Section */}
