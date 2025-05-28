@@ -17,9 +17,8 @@
     <li>React.js</li>
     <li>Tailwind CSS</li>
     <li>React Router</li>
-    <li>Axios</li>
-    <li>React Query</li>
-    <li>LocalStorage / Context API (for state management)</li>
+    <li>React Query & Axios</li>
+    <li>Context API (for state management)</li>
   </ul>
 
   <h2>🚀 Getting Started</h2>
